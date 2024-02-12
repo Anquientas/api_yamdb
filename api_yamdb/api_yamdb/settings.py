@@ -105,9 +105,11 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
+
 # User model
 
 AUTH_USER_MODEL = 'users.User'
+
 
 # Simple JWT
 
@@ -125,3 +127,14 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": False,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+
+# E-mail backend
+
+# Подключаем бэкенд filebased.EmailBackend:
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+# Или по умолчанию (?)
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Директория, в которую будут сохраняться файлы писем:
+EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
