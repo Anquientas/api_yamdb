@@ -13,7 +13,7 @@ class User(AbstractUser):
         validators=[RegexValidator(
             regex=r'^[\w.@+-]+\Z',
             message='Никнейм содержит недопустимый символ!'
-        )]   
+        )]
     )
     email = models.EmailField(
         verbose_name='E-mail',
@@ -47,3 +47,11 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
         # ordering = ('id',)?
         ordering = ('username',)
+
+    def __str__(self):
+        return (
+            # Добавить ограничение на выводимую длину никнейма
+            f'Никнейм: {self.username}, ',
+            f'e-mail: {self.email}, ',
+            f'id: {self.pk}'
+        )
