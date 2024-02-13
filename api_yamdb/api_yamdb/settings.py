@@ -132,6 +132,8 @@ SIMPLE_JWT = {
 
 # E-mail backend
 
+DEFAULT_FROM_EMAIL = 'api_yamdb@bacfend.ru'
+
 # Подключаем бэкенд filebased.EmailBackend:
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 # Или по умолчанию (?)
