@@ -1,5 +1,4 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
 from django.db import models
 
 
@@ -9,11 +8,6 @@ class User(AbstractUser):
         verbose_name='Никнейм',
         unique=True,
         max_length=150,
-        # Вынести в validators?
-        validators=[RegexValidator(
-            regex=r'^[\w.@+-]+\Z',
-            message='Никнейм содержит недопустимый символ!'
-        )]
     )
     email = models.EmailField(
         verbose_name='E-mail',
@@ -41,6 +35,10 @@ class User(AbstractUser):
         max_length=50,
         default='user'
     )
+    confirmation_code = models.CharField(
+        verbose_name='Код подтверждения',
+        max_length=150,
+    )
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -50,8 +48,7 @@ class User(AbstractUser):
 
     def __str__(self):
         return (
-            # Добавить ограничение на выводимую длину никнейма
-            f'Никнейм: {self.username}, ',
+            f'Никнейм: {self.username[:15]}, ',
             f'e-mail: {self.email}, ',
             f'id: {self.pk}'
         )
