@@ -3,7 +3,7 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, filters
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAdminOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from .serializers import (
     CategorySerializer,
@@ -49,18 +49,18 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
 
 
-class GenreList(viewsets.ModelViewSet):
+class GenreViewSet(viewsets.ModelViewSet):
     """ViewSet для жанров."""
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -71,7 +71,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
     search_fields = ('name', 'year', 'genre__name', 'category__name')

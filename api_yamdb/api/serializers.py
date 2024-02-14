@@ -1,7 +1,10 @@
+import datetime
+
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+from rest_framework import serializers
 
-from reviews.models import Comment, Review
+from reviews.models import Category, Genre, Title, Comment, Review
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -27,10 +30,6 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
         read_only_fields = ('review',)
-from rest_framework import serializers
-import datetime
-
-from reviews.models import Category, Genre, Title
 
 
 class CategorySerializer(serializers.ModelSerializer):
