@@ -1,10 +1,15 @@
-import datetime
+from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework import serializers
 
-from reviews.models import Category, Genre, Title, Comment, Review
+import datetime
+
+from reviews.models import Comment, Review, Category, Genre, Title
+# from .models import User
+
+User = get_user_model()
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -94,3 +99,21 @@ class TitleSerializer(serializers.ModelSerializer):
                 'Рейтинг не может быть меньше ноля.'
             )
         return value
+
+
+class SignUpSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('email', 'username')
+
+
+class GetTokenSerializer(serializers.ModelSerializer):
+
+    username = serializers.CharField(required=True)
+    confirmation_code = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'confirmation_code')
+        read_only_fields = ('confirmation_code',)
