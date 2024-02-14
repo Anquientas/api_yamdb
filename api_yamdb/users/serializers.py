@@ -1,6 +1,9 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import User
+# from .models import User
+
+User = get_user_model()
 
 
 BANNED_SYMBOLS = '@.+-_'
@@ -11,9 +14,7 @@ class UserAdminSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = (
-            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
-        )
+        fields = ('__all__')
 
     def validate_username(self, username):
         if username == 'me':

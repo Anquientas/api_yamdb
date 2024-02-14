@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+# from django.contrib.auth.base_user import make_random_password
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
@@ -45,7 +46,7 @@ class User(AbstractUser):
     )
     confirmation_code = models.CharField(
         verbose_name='Код подтверждения',
-        max_length=150,
+        max_length=10,
         default='1234567890'
     )
 
@@ -59,6 +60,9 @@ class User(AbstractUser):
         # if self.is_staff or self.is_superuser:
         #     self.role = UserRoles.ADMIN.name
         return self.role == UserRoles.ADMIN.name
+
+    def make_confirmation_code(self):
+        self.confirmation_code = User.objects.make_random_password()
 
     class Meta:
         verbose_name = 'Пользователь'
