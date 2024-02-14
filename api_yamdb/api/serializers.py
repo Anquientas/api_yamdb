@@ -8,8 +8,8 @@ import datetime
 from reviews.models import Comment, Review, Category, Genre, Title
 # from .models import User
 
-User = get_user_model(), Category, Genre, Title
-# from .models import User
+
+User = get_user_model()
 
 
 class ReviewSerializer(serializers.ModelSerializer):
