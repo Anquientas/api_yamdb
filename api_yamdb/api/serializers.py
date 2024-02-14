@@ -1,9 +1,9 @@
+import datetime
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework import serializers
-
-import datetime
 
 from reviews.models import Comment, Review, Category, Genre, Title
 # from .models import User
@@ -66,16 +66,16 @@ class TitleSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Category.objects.all()
     )
-    reviews = serializers.SlugRelatedField(
-        many=True,
-        slug_field='id',
-        queryset=Review.objects.all()
-    )
-    comments = serializers.SlugRelatedField(
-        many=True,
-        slug_field='id',
-        queryset=Comment.objects.all()
-    )
+    # reviews = serializers.SlugRelatedField(
+    #     many=True,
+    #     slug_field='id',
+    #     queryset=Review.objects.all()
+    # )
+    # comments = serializers.SlugRelatedField(
+    #     many=True,
+    #     slug_field='id',
+    #     queryset=Comment.objects.all()
+    # )
 
     class Meta:
         model = Title
