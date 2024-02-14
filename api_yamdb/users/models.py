@@ -1,5 +1,10 @@
 from django.contrib.auth.models import AbstractUser
+# from django.contrib.auth.base_user import make_random_password
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
+
+from .enums import UserRoles
+from .validators import validate_username
 
 
 class User(AbstractUser):
@@ -7,38 +12,57 @@ class User(AbstractUser):
     username = models.CharField(
         verbose_name='Никнейм',
         unique=True,
+        blank=True,
         max_length=150,
+        validators=(UnicodeUsernameValidator(), validate_username),
     )
     email = models.EmailField(
         verbose_name='E-mail',
         unique=True,
+        blank=True,
         max_length=254,
     )
     first_name = models.CharField(
         verbose_name='Имя',
+        blank=True,
         max_length=150,
-        blank=True
     )
     last_name = models.CharField(
         verbose_name='Фамилия',
+        blank=True,
         max_length=150,
-        blank=True
     )
     bio = models.TextField(
         # verbose_name='О себе',?
         verbose_name='Биография',
-        blank=True
+        blank=True,
     )
-    # ENUM? What and how?   Enum: "user" "moderator" "admin"
     role = models.CharField(
-        verbose_name='Фамилия',
+        verbose_name='Роль',
         max_length=50,
-        default='user'
+        blank=True,
+        choices=UserRoles,
+        default=UserRoles.USER.name
     )
     confirmation_code = models.CharField(
         verbose_name='Код подтверждения',
-        max_length=150,
+        max_length=10,
+        default='1234567890'
     )
+
+    def is_user(self):
+        return self.role == UserRoles.USER.name
+
+    def is_moderator(self):
+        return self.role == UserRoles.MODERATOR.name
+
+    def is_admin(self):
+        # if self.is_staff or self.is_superuser:
+        #     self.role = UserRoles.ADMIN.name
+        return self.role == UserRoles.ADMIN.name
+
+    def make_confirmation_code(self):
+        self.confirmation_code = User.objects.make_random_password()
 
     class Meta:
         verbose_name = 'Пользователь'

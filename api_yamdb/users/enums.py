@@ -1,9 +1,7 @@
-from enum import Enum, unique
+from django.db.models import TextChoices
 
 
-#  Enum: "user" "moderator" "admin"
-@unique
-class Role(Enum):
-    user = 'user'
-    moderator = 'moderator'
-    admin = 'admin'
+class UserRoles(TextChoices):
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
