@@ -4,7 +4,7 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, filters, status
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAdminOrReadOnly, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -20,6 +20,10 @@ from .serializers import (
 )
 from reviews.models import Category, Genre, Review, Title
 from .utils import send_confirmation_code
+from .permissions import (
+    IsAdminOrReadOnly,
+    IsAuthorOrModeratorOrAdminOrReadOnly
+)
 
 
 User = get_user_model()
