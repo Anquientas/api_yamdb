@@ -1,11 +1,13 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+from rest_framework import serializers
 
 import datetime
 
 from reviews.models import Comment, Review, Category, Genre, Title
 # from .models import User
+
 
 User = get_user_model()
 
