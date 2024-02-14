@@ -8,9 +8,10 @@ from .views import (
     GenreViewSet,
     TitleViewSet,
     GetTokenViewSet,
-    UserViewSet,
     UserCreateViewSet
 )
+
+from users.views import UserViewSet
 
 
 auth_urls = [
