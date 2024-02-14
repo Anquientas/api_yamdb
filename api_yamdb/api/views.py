@@ -25,7 +25,6 @@ from .permissions import (
     IsAuthorOrModeratorOrAdminOrReadOnly
 )
 
-
 User = get_user_model()
 
 
