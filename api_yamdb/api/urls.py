@@ -7,25 +7,11 @@ from .views import (
     CategoryViewSet,
     GenreViewSet,
     TitleViewSet,
-    GetTokenViewSet,
-    UserCreateViewSet
+    APIGetToken,
+    APISignUp
 )
-
 from users.views import UserViewSet
 
-
-auth_urls = [
-    path(
-        'signup/',
-        UserCreateViewSet.as_view(),
-        name='signup'
-    ),
-    path(
-        'token/',
-        GetTokenViewSet.as_view(),
-        name='token'
-    )
-]
 
 router_v1 = SimpleRouter()
 router_v1.register(
@@ -44,6 +30,7 @@ router_v1.register('titles', TitleViewSet, basename='titles')
 router_v1.register('users', UserViewSet, basename='users')
 
 urlpatterns = [
-    path('v1/', include(router_v1.urls))
-    # path('v1/auth/', include(auth_urls)),
+    path('v1/', include(router_v1.urls)),
+    path('v1/auth/signup/', APISignUp.as_view(), name='signup'),
+    path('v1/auth/token/', APIGetToken.as_view(), name='token'),
 ]
