@@ -125,6 +125,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 10
 }
 
 SIMPLE_JWT = {
@@ -144,11 +146,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
 # Директория, в которую будут сохраняться файлы писем:
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
-
-# подключаем LimitOffsetPagination
-REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 10
-}
 
 IMPORT_FORMATS = (CSV,)
