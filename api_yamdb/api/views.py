@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, filters, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -22,6 +23,7 @@ from reviews.models import Category, Genre, Review, Title
 from .utils import send_confirmation_code
 from .permissions import (
     IsAdminOrReadOnly,
+    IsAuthorOrModeratorOrAdminOrAuthCreateOrReadOnly,
     IsAuthorOrModeratorOrAdminOrReadOnly
 )
 
@@ -30,22 +32,49 @@ User = get_user_model()
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
+    permission_classes = (
+        IsAuthorOrModeratorOrAdminOrAuthCreateOrReadOnly,
+    )
+    http_method_names = ['delete', 'get', 'patch', 'post', 'head', 'options']
 
     def get_title(self):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
+
+    def update_rating(self):
+        title = self.get_title()
+        title.rating = int(
+            title.reviews.all().aggregate(Avg('score')).get('score__avg')
+        )
+        title.save()
 
     def get_queryset(self):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, title=self.get_title())
         title = self.get_title()
-        # title.rating = title.reviews.all().aggregate(Avg('score'))
-        # title.save()
+        if Review.objects.filter(author=self.request.user, title=title):
+            raise ValidationError(
+                'Пользователь не может оставить более '
+                'одного отзыва на каждое произведение.'
+            )
+        serializer.save(author=self.request.user, title=title)
+        self.update_rating()
+
+    def perform_destroy(self, instance):
+        super(ReviewViewSet, self).perform_destroy(instance)
+        self.update_rating()
+
+    def perform_update(self, serializer):
+        super(ReviewViewSet, self).perform_update(serializer)
+        self.update_rating()
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
+    permission_classes = (
+        IsAuthorOrModeratorOrAdminOrAuthCreateOrReadOnly,
+    )
+    http_method_names = ['delete', 'get', 'patch', 'post', 'head', 'options']
 
     def get_review(self):
         return get_object_or_404(Review, id=self.kwargs.get('review_id'))

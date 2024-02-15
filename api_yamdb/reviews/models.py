@@ -1,7 +1,10 @@
 import datetime
 
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.core.validators import MaxValueValidator, RegexValidator
+
+User = get_user_model()
 
 
 class Category(models.Model):
@@ -66,19 +69,27 @@ class Title(models.Model):
 
 class Review(models.Model):
     text = models.TextField('Текст')
-    author = models.IntegerField('Автор')  # models.ForeignKey()
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='reviews')
     score = models.PositiveSmallIntegerField('Оценка')
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews')
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique_author_title'
+            )
+        ]
         ordering = ('pub_date',)
 
 
 class Comment(models.Model):
     text = models.TextField('Текст')
-    author = models.IntegerField('Автор')  # models.ForeignKey()
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comments')
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE, related_name='comments')
