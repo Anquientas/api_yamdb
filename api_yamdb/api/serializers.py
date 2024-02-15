@@ -1,11 +1,14 @@
 import datetime
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
+# from rest_framework.serializers import ValidationError
 from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Comment, Review, Category, Genre, Title
-# from .models import User
+
+from django.shortcuts import get_object_or_404
 
 
 User = get_user_model()
@@ -79,14 +82,49 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class SignUpSerializer(serializers.ModelSerializer):
+    """Сериализатор для даннных пользователя при регистрации."""
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=(
+            # UniqueValidator(queryset=User.objects.all()),
+            UnicodeUsernameValidator(),
+        )
+    )
+    email = serializers.EmailField(
+        required=True,
+        max_length=254,
+        # validators=(UniqueValidator(queryset=User.objects.all()),)
+    )
 
     class Meta:
         model = User
         fields = ('email', 'username')
 
+    def validate(self, data):
+        if 'username' not in data:
+            raise serializers.ValidationError({'username': 'username не поступил с данными!'})
+        if 'email' not in data:
+            raise serializers.ValidationError({'email': 'email не поступил с данными!'})
+        if data['username'] == 'me':
+            raise serializers.ValidationError(
+                {'username': 'Использовать никнейм "me" запрещено!'}
+            )
+        if User.objects.all().filter(username=data['username']):
+            user = get_object_or_404(User, username=data['username'])
+            if user.email != data['email']:
+                raise serializers.ValidationError({'username': 'Такой никнейм уже использован!'})
+
+        if User.objects.all().filter(email=data['email']):
+            user = get_object_or_404(User, email=data['email'])
+            if user.username != data['username']:
+                raise serializers.ValidationError({'email': 'Такой email уже использован!'})
+
+        return data
+
 
 class GetTokenSerializer(serializers.ModelSerializer):
-
+    """Сериализатор для данных пользователя при получении токена."""
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
 

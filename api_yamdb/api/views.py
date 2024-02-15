@@ -6,8 +6,8 @@ from rest_framework import viewsets, filters, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
-from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.generics import CreateAPIView
 
 from .filters import TitleFilter
 from .serializers import (
@@ -19,13 +19,15 @@ from .serializers import (
     SignUpSerializer,
     GetTokenSerializer
 )
-from reviews.models import Category, Genre, Review, Title
 from .utils import send_confirmation_code
+from reviews.models import Category, Genre, Review, Title
+
 from .permissions import (
     IsAdminOrReadOnly,
     IsAuthorOrModeratorOrAdminOrAuthCreateOrReadOnly,
     IsAuthorOrModeratorOrAdminOrReadOnly
 )
+
 
 User = get_user_model()
 
@@ -121,25 +123,29 @@ class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'delete', 'head', 'option', 'patch')
 
 
-class APISignUp(APIView):
+class APISignUp(CreateAPIView):
     """View-класс регистрации нового пользователя."""
     # permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            user.make_confirmation_code()
-            send_confirmation_code(
-                user.email,
-                user.confirmation_code,
-                user.username
-            )
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            try:
+                user = User.objects.get(username=request.data.get('username'))
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except User.DoesNotExist:
+                user = serializer.save()
+                user.confirmation_code = User.objects.make_random_password()
+                send_confirmation_code(
+                    user.email,
+                    user.confirmation_code,
+                    user.username
+                )
+                return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class APIGetToken(APIView):
+class APIGetToken(CreateAPIView):
     """View-класс получения JWT-токена."""
     # permission_classes = (AllowAny,)
 
@@ -156,10 +162,10 @@ class APIGetToken(APIView):
                 )
             if data.get('confirmation_code') == user.confirmation_code:
                 token = RefreshToken.for_user(user).access_token
-            return Response(
-                {'token': str(token)},
-                status=status.HTTP_200_OK
-            )
+                return Response(
+                    {'token': str(token)},
+                    status=status.HTTP_200_OK
+                )
         return Response(
             {'confirmation_code': 'Неверный код подтверждения!'},
             status=status.HTTP_400_BAD_REQUEST

@@ -1,38 +1,59 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
-
-# from .models import User
+# from rest_framework.serializers import ValidationError
+from rest_framework.validators import UniqueValidator
 
 User = get_user_model()
 
 
-BANNED_SYMBOLS = '@.+-_'
-
-
 class UserAdminSerializer(serializers.ModelSerializer):
     """Сериализатор для модели 'User'-администратора."""
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=(
+            UniqueValidator(queryset=User.objects.all()),
+            UnicodeUsernameValidator(),
+        )
+    )
+    email = serializers.EmailField(
+        required=True,
+        max_length=254,
+        validators=(UniqueValidator(queryset=User.objects.all()),)
+    )
 
     class Meta:
         model = User
-        fields = ('__all__')
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
+        )
 
-    def validate_username(self, username):
-        if username == 'me':
-            serializers.ValidationError(
-                'Использовать никнейм "me" запрещено!',
-                params={'username': username},
+    def validate(self, data):
+        if 'username' in data and data['username'] == 'me':
+            raise serializers.ValidationError(
+                {'username': 'Использовать никнейм "me" запрещено!'}
             )
-        for symbol in BANNED_SYMBOLS:
-            if symbol in username:
-                serializers.ValidationError(
-                    'Никнейм содержит недопустимый символ!',
-                    params={'username': username},
-                )
-        return username
+        return data
 
 
 class UserNotAdminSerializer(serializers.ModelSerializer):
     """Сериализатор для модели 'User'-не администратора."""
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=(
+            UniqueValidator(queryset=User.objects.all()),
+            UnicodeUsernameValidator(),
+        )
+    )
+    email = serializers.EmailField(
+        required=True,
+        max_length=254,
+        validators=(UniqueValidator(queryset=User.objects.all()),)
+    )
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150)
 
     class Meta:
         model = User
@@ -41,16 +62,9 @@ class UserNotAdminSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('role',)
 
-    def validate_username(self, username):
-        if username == 'me':
-            serializers.ValidationError(
-                'Использовать никнейм "me" запрещено!',
-                params={'username': username},
+    def validate(self, data):
+        if 'username' in data and data['username'] == 'me':
+            raise serializers.ValidationError(
+                {'username': 'Использовать никнейм "me" запрещено!'}
             )
-        for symbol in BANNED_SYMBOLS:
-            if symbol in username:
-                serializers.ValidationError(
-                    'Никнейм содержит недопустимый символ!',
-                    params={'username': username},
-                )
-        return username
+        return data
