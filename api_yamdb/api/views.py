@@ -6,8 +6,8 @@ from rest_framework import viewsets, filters, status
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.generics import CreateAPIView
 
 from .serializers import (
     CategorySerializer,
@@ -18,12 +18,10 @@ from .serializers import (
     SignUpSerializer,
     GetTokenSerializer
 )
-from reviews.models import Category, Genre, Review, Title
 from .utils import send_confirmation_code
-from .permissions import (
-    IsAdminOrReadOnly,
-    IsAuthorOrModeratorOrAdminOrReadOnly
-)
+from reviews.models import Category, Genre, Review, Title
+
+
 
 User = get_user_model()
 
@@ -62,7 +60,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    # permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -73,7 +71,7 @@ class GenreViewSet(viewsets.ModelViewSet):
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    # permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -84,21 +82,19 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    # permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
     search_fields = ('name', 'year', 'genre__name', 'category__name')
 
 
-class APISignUp(APIView):
+class APISignUp(CreateAPIView):
     """View-класс регистрации нового пользователя."""
-    permission_classes = (AllowAny,)
-
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            user.make_confirmation_code()
+            # user.confirmation_code = User.objects.make_random_password()
             send_confirmation_code(
                 user.email,
                 user.confirmation_code,
@@ -108,7 +104,7 @@ class APISignUp(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class APIGetToken(APIView):
+class APIGetToken(CreateAPIView):
     """View-класс получения JWT-токена."""
     permission_classes = (AllowAny,)
 
@@ -125,10 +121,10 @@ class APIGetToken(APIView):
                 )
             if data.get('confirmation_code') == user.confirmation_code:
                 token = RefreshToken.for_user(user).access_token
-            return Response(
-                {'token': str(token)},
-                status=status.HTTP_200_OK
-            )
+                return Response(
+                    {'token': str(token)},
+                    status=status.HTTP_200_OK
+                )
         return Response(
             {'confirmation_code': 'Неверный код подтверждения!'},
             status=status.HTTP_400_BAD_REQUEST

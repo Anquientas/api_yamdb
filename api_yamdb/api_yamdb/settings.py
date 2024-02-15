@@ -1,5 +1,5 @@
 from pathlib import Path
-from import_export.formats.base_formats import CSV
+# from import_export.formats.base_formats import CSV
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'django_filters',
+    # 'import_export',
     'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
     'users.apps.UsersConfig',
@@ -126,10 +127,9 @@ REST_FRAMEWORK = {
         'user': '1000/min',
         'anon': '500/min',
     },
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    ],
-
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    # ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
@@ -155,4 +155,4 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 # Директория, в которую будут сохраняться файлы писем:
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
-IMPORT_FORMATS = (CSV,)
+# IMPORT_FORMATS = (CSV,)
