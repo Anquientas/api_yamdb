@@ -1,5 +1,4 @@
 from pathlib import Path
-from import_export.formats.base_formats import CSV
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -154,5 +153,3 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
 # Директория, в которую будут сохраняться файлы писем:
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
-
-IMPORT_FORMATS = (CSV,)
