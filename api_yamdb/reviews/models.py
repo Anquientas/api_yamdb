@@ -1,5 +1,8 @@
+import datetime
+
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.core.validators import MaxValueValidator, RegexValidator
 
 User = get_user_model()
 
@@ -30,7 +33,13 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField(max_length=256, verbose_name='Название')
-    year = models.IntegerField(verbose_name='Год выпуска')
+    year = models.IntegerField(
+        validators=[
+            RegexValidator(r'^[0-9]+$'),
+            MaxValueValidator(datetime.date.today().year),
+        ],
+        verbose_name='Год выпуска'
+    )
     description = models.TextField(blank=True, verbose_name='Описание')
     genre = models.ManyToManyField(
         Genre,
@@ -44,8 +53,8 @@ class Title(models.Model):
         verbose_name='Категория',
         related_name='titles',
     )
-    rating = models.IntegerField(
-        verbose_name='Рейтинг',
+    rating = models.PositiveSmallIntegerField(
+        verbose_name='Оценка',
         null=True,
         default=None
     )
@@ -56,14 +65,6 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class GenreTitle(models.Model):
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('genre', 'title')
 
 
 class Review(models.Model):

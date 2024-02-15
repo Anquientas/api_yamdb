@@ -3,7 +3,7 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 class IsAdminOrReadOnly(BasePermission):
 
-    def has_object_permission(self, request, view):
+    def has_permission(self, request, view):
         return request.method in SAFE_METHODS or request.user.is_admin
 
 
@@ -46,5 +46,5 @@ class IsAuthorOrModeratorOrAdminOrAuthCreateOrReadOnly(BasePermission):
             or obj.author == request.user
             or request.user.is_admin
             or request.user.is_moderator
-            # or request.user.is_staff - кто такой staff?
+            or request.user.is_staff
         )
