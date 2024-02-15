@@ -22,7 +22,6 @@ from .utils import send_confirmation_code
 from reviews.models import Category, Genre, Review, Title
 
 
-
 User = get_user_model()
 
 
@@ -93,20 +92,24 @@ class APISignUp(CreateAPIView):
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            # user.confirmation_code = User.objects.make_random_password()
-            send_confirmation_code(
-                user.email,
-                user.confirmation_code,
-                user.username
-            )
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            try:
+                user = User.objects.get(username=request.data.get('username'))
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except User.DoesNotExist:
+                user = serializer.save()
+                user.confirmation_code = User.objects.make_random_password()
+                send_confirmation_code(
+                    user.email,
+                    user.confirmation_code,
+                    user.username
+                )
+                return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class APIGetToken(CreateAPIView):
     """View-класс получения JWT-токена."""
-    permission_classes = (AllowAny,)
+    # permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = GetTokenSerializer(data=request.data)

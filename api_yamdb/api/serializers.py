@@ -10,6 +10,8 @@ from rest_framework.validators import UniqueValidator
 
 from reviews.models import Comment, Review, Category, Genre, Title
 
+from django.shortcuts import get_object_or_404
+
 
 User = get_user_model()
 
@@ -109,14 +111,14 @@ class SignUpSerializer(serializers.ModelSerializer):
         required=True,
         max_length=150,
         validators=(
-            UniqueValidator(queryset=User.objects.all()),
+            # UniqueValidator(queryset=User.objects.all()),
             UnicodeUsernameValidator(),
         )
     )
     email = serializers.EmailField(
         required=True,
         max_length=254,
-        validators=(UniqueValidator(queryset=User.objects.all()),)
+        # validators=(UniqueValidator(queryset=User.objects.all()),)
     )
 
     class Meta:
@@ -125,13 +127,23 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if 'username' not in data:
-            raise serializers.ValidationError({'username': 'username'})
+            raise serializers.ValidationError({'username': 'username не поступил с данными!'})
         if 'email' not in data:
-            raise serializers.ValidationError({'email': 'email'})
+            raise serializers.ValidationError({'email': 'email не поступил с данными!'})
         if data['username'] == 'me':
             raise serializers.ValidationError(
                 {'username': 'Использовать никнейм "me" запрещено!'}
             )
+        if User.objects.all().filter(username=data['username']):
+            user = get_object_or_404(User, username=data['username'])
+            if user.email != data['email']:
+                raise serializers.ValidationError({'username': 'Такой никнейм уже использован!'})
+
+        if User.objects.all().filter(email=data['email']):
+            user = get_object_or_404(User, email=data['email'])
+            if user.username != data['username']:
+                raise serializers.ValidationError({'email': 'Такой email уже использован!'})
+
         return data
 
 
