@@ -3,12 +3,12 @@ from django.contrib.auth import get_user_model
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, filters, status
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .filters import TitleFilter
 from .serializers import (
     CategorySerializer,
     CommentSerializer,
@@ -62,10 +62,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
+    http_method_names = ('get', 'post', 'delete', 'head')
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -73,10 +74,11 @@ class GenreViewSet(viewsets.ModelViewSet):
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
+    http_method_names = ('get', 'post', 'delete', 'head')
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -84,15 +86,15 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
-    pagination_class = LimitOffsetPagination
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
-    search_fields = ('name', 'year', 'genre__name', 'category__name')
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
+    http_method_names = ('get', 'post', 'delete', 'head', 'option', 'patch')
 
 
 class APISignUp(APIView):
     """View-класс регистрации нового пользователя."""
-    permission_classes = (AllowAny,)
+    # permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
@@ -110,7 +112,7 @@ class APISignUp(APIView):
 
 class APIGetToken(APIView):
     """View-класс получения JWT-токена."""
-    permission_classes = (AllowAny,)
+    # permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = GetTokenSerializer(data=request.data)
