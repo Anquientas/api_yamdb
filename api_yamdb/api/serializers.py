@@ -2,19 +2,33 @@ import datetime
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-# from rest_framework.serializers import ValidationError
 from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Comment, Review, Category, Genre, Title
 
-from django.shortcuts import get_object_or_404
-
 
 User = get_user_model()
 
+MIN_GRADE = 1
+MAX_GRADE = 10
+
+GRADE_IS_INT_IN_RANGE = (
+    'Оценка должна быть целым числом '
+    'в диапазоне от {min_grade} до {max_grade}!'
+)
+YEAR_MORE_CURRENT = 'Год выпуска не может быть больше текущего!'
+NOT_USERNAME = 'В полученных данных отсутствует username!'
+NOT_EMAIL = 'В полученных данных отсутствует email!'
+USERNAME_NOT_ME = 'Использовать никнейм "me" запрещено!'
+USERNAME_USE = 'Никнейм "{username}" уже используется!'
+EMAIL_USE = 'Email "{email}" уже используется!'
+
 
 class ReviewSerializer(serializers.ModelSerializer):
+    #############################################################################################################################
+
     author = SlugRelatedField(read_only=True, slug_field='username')
 
     class Meta:
@@ -23,14 +37,19 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ('title',)
 
     def validate_score(self, value):
-        if value < 1 or value > 10:
+        if value < MIN_GRADE or value > MAX_GRADE:
             raise serializers.ValidationError(
-                'Оценка должна быть целым числом в диапазоне от 1 до 10!'
+                GRADE_IS_INT_IN_RANGE.format(
+                    min_grade=MIN_GRADE,
+                    max_grade=MAX_GRADE
+                )
             )
         return value
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    #############################################################################################################################
+
     author = SlugRelatedField(read_only=True, slug_field='username')
 
     class Meta:
@@ -55,46 +74,52 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ('name', 'slug')
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    """Сериализатор произведений."""
+class TitleGetSerializer(serializers.ModelSerializer):
+    """Сериализатор произведений для метода GET."""
 
     rating = serializers.IntegerField(read_only=True)
-    genre = serializers.SlugRelatedField(
-        many=True,
-        slug_field='slug',
-        queryset=Genre.objects.all()
-    )
-    category = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all()
-    )
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
 
     class Meta:
+        fields = '__all__'
         model = Title
-        fields = ('__all__')
 
     def validate_year(self, value):
         if value > datetime.date.today().year:
-            raise serializers.ValidationError(
-                'Год выпуска не может быть больше текущего!'
-            )
+            raise serializers.ValidationError(YEAR_MORE_CURRENT)
         return value
+
+
+class TitlePostSerializer(serializers.ModelSerializer):
+    """Сериализатор произведений для метода POST."""
+
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True,
+    )
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug',
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Title
 
 
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для даннных пользователя при регистрации."""
+
     username = serializers.CharField(
         required=True,
         max_length=150,
-        validators=(
-            # UniqueValidator(queryset=User.objects.all()),
-            UnicodeUsernameValidator(),
-        )
+        validators=(UnicodeUsernameValidator(),)
     )
     email = serializers.EmailField(
         required=True,
         max_length=254,
-        # validators=(UniqueValidator(queryset=User.objects.all()),)
     )
 
     class Meta:
@@ -103,28 +128,35 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if 'username' not in data:
-            raise serializers.ValidationError({'username': 'username не поступил с данными!'})
+            raise serializers.ValidationError(
+                {'username': NOT_USERNAME}
+            )
         if 'email' not in data:
-            raise serializers.ValidationError({'email': 'email не поступил с данными!'})
+            raise serializers.ValidationError(
+                {'email': NOT_EMAIL}
+            )
         if data['username'] == 'me':
             raise serializers.ValidationError(
-                {'username': 'Использовать никнейм "me" запрещено!'}
+                {'username': USERNAME_NOT_ME}
             )
         if User.objects.all().filter(username=data['username']):
             user = get_object_or_404(User, username=data['username'])
             if user.email != data['email']:
-                raise serializers.ValidationError({'username': 'Такой никнейм уже использован!'})
-
+                raise serializers.ValidationError(
+                    {'username': USERNAME_USE.format(username=user.username)}
+                )
         if User.objects.all().filter(email=data['email']):
             user = get_object_or_404(User, email=data['email'])
             if user.username != data['username']:
-                raise serializers.ValidationError({'email': 'Такой email уже использован!'})
-
+                raise serializers.ValidationError(
+                    {'email': EMAIL_USE.format(email=user.email)}
+                )
         return data
 
 
 class GetTokenSerializer(serializers.ModelSerializer):
     """Сериализатор для данных пользователя при получении токена."""
+
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
 

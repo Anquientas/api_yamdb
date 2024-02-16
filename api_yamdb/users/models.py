@@ -1,20 +1,13 @@
 from django.contrib.auth.models import AbstractUser
-# from django.contrib.auth.base_user import make_random_password
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
 from .enums import UserRoles
 
 
-# CHOICES = (
-#     ('user', 'user'),
-#     ('moderator', 'moderator'),
-#     ('admin', 'admin')
-# )
-
-
 class User(AbstractUser):
-    """Класс пользователя."""
+    """Класс кастомного пользователя."""
+
     username = models.CharField(
         verbose_name='Никнейм',
         unique=True,
@@ -71,9 +64,8 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        # if self.is_staff or self.is_superuser:
-        # if self.is_staff and self.role != UserRoles.ADMIN:
-        #     self.role = UserRoles.ADMIN
+        if self.is_staff and self.role != UserRoles.ADMIN:
+            self.role = UserRoles.ADMIN
         return self.role == UserRoles.ADMIN
 
     def __str__(self):
@@ -81,4 +73,5 @@ class User(AbstractUser):
             f'Никнейм: {self.username[:15]}, '
             f'e-mail: {self.email}, '
             f'id: {self.pk}'
+            f'role: {self.role}'
         )

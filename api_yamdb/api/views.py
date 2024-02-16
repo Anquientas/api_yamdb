@@ -1,43 +1,55 @@
-from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, filters, status
-from rest_framework.permissions import AllowAny
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, viewsets, status
+from rest_framework.generics import CreateAPIView
+from rest_framework.mixins import (
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin
+)
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.generics import CreateAPIView
 
 from .filters import TitleFilter
+from .permissions import (
+    IsAdminOrReadOnly,
+    IsAuthenticatedToCreateOrAuthorOrModeratorOrAdminToChangeOrReadOnly
+)
 from .serializers import (
     CategorySerializer,
     CommentSerializer,
     GenreSerializer,
     ReviewSerializer,
-    TitleSerializer,
     SignUpSerializer,
-    GetTokenSerializer
+    GetTokenSerializer,
+    TitleGetSerializer,
+    TitlePostSerializer,
 )
 from .utils import send_confirmation_code
 from reviews.models import Category, Genre, Review, Title
 
-from .permissions import (
-    IsAdminOrReadOnly,
-    IsAuthorOrModeratorOrAdminOrAuthCreateOrReadOnly,
-    IsAuthorOrModeratorOrAdminOrReadOnly
-)
-
 
 User = get_user_model()
 
+REVIEW_IS_ONE = (
+    'Пользователь не может оставить более одного отзыва '
+    'на каждое произведение.'
+)
+USER_NOT_FOUND = 'Пользователь с никнейном {username} не найден!'
+CODE_NOT_VALID = 'Неверный код подтверждения!'
+
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    #############################################################################################################################
+
     serializer_class = ReviewSerializer
     permission_classes = (
-        IsAuthorOrModeratorOrAdminOrAuthCreateOrReadOnly,
+        IsAuthenticatedToCreateOrAuthorOrModeratorOrAdminToChangeOrReadOnly,
     )
-    http_method_names = ['delete', 'get', 'patch', 'post', 'head', 'options']
+    http_method_names = ('delete', 'get', 'patch', 'post', 'head', 'options')
 
     def get_title(self):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -55,10 +67,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         title = self.get_title()
         if Review.objects.filter(author=self.request.user, title=title):
-            raise ValidationError(
-                'Пользователь не может оставить более '
-                'одного отзыва на каждое произведение.'
-            )
+            raise ValidationError(REVIEW_IS_ONE)
         serializer.save(author=self.request.user, title=title)
         self.update_rating()
 
@@ -72,9 +81,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    #############################################################################################################################
+
     serializer_class = CommentSerializer
     permission_classes = (
-        IsAuthorOrModeratorOrAdminOrAuthCreateOrReadOnly,
+        IsAuthenticatedToCreateOrAuthorOrModeratorOrAdminToChangeOrReadOnly,
     )
     http_method_names = ['delete', 'get', 'patch', 'post', 'head', 'options']
 
@@ -88,7 +99,10 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=self.get_review())
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(CreateModelMixin,
+                      DestroyModelMixin,
+                      ListModelMixin,
+                      viewsets.GenericViewSet):
     """ViewSet для категорий."""
 
     queryset = Category.objects.all()
@@ -97,10 +111,12 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    http_method_names = ('get', 'post', 'delete', 'head')
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(CreateModelMixin,
+                   DestroyModelMixin,
+                   ListModelMixin,
+                   viewsets.GenericViewSet):
     """ViewSet для жанров."""
 
     queryset = Genre.objects.all()
@@ -109,23 +125,25 @@ class GenreViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    http_method_names = ('get', 'post', 'delete', 'head')
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """ViewSet для произведений."""
 
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     http_method_names = ('get', 'post', 'delete', 'head', 'option', 'patch')
 
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitleGetSerializer
+        return TitlePostSerializer
+
 
 class APISignUp(CreateAPIView):
     """View-класс регистрации нового пользователя."""
-    # permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
@@ -147,26 +165,27 @@ class APISignUp(CreateAPIView):
 
 class APIGetToken(CreateAPIView):
     """View-класс получения JWT-токена."""
-    # permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = GetTokenSerializer(data=request.data)
         if serializer.is_valid():
-            data = serializer.validated_data
+            username = serializer.validated_data.get('username')
+            confirmation_code = serializer.validated_data.get(
+                'confirmation_code'
+            )
             try:
-                user = User.objects.get(username=data.get('username'))
+                user = User.objects.get(username=username)
             except User.DoesNotExist:
                 return Response(
-                    {'username': 'Пользователь не найден!'},
+                    {'username': USER_NOT_FOUND.format(username=username)},
                     status=status.HTTP_404_NOT_FOUND
                 )
-            if data.get('confirmation_code') == user.confirmation_code:
-                token = RefreshToken.for_user(user).access_token
+            if confirmation_code == user.confirmation_code:
                 return Response(
-                    {'token': str(token)},
+                    {'token': str(RefreshToken.for_user(user).access_token)},
                     status=status.HTTP_200_OK
                 )
         return Response(
-            {'confirmation_code': 'Неверный код подтверждения!'},
+            {'confirmation_code': CODE_NOT_VALID},
             status=status.HTTP_400_BAD_REQUEST
         )
