@@ -77,7 +77,7 @@ def import_genretitle():
                 continue
             title = Title.objects.get(id=row['title_id'])
             genre = Genre.objects.get(id=row['genre_id'])
-            title.genre.add(genre)  # используем add, чтобы не создавать дубликаты
+            title.genre.add(genre)
 
 
 def import_comment():
