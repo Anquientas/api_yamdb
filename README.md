@@ -82,6 +82,41 @@ python3 manage.py migrate
 py manage.py migrate
 ```
 
+**Наполнить базу данных с помощью импорта из csv-файлов:**
+
+Инструкции по Импорту Данных
+
+Для импорта данных в базу данных используйте следующие функции. Каждая функция отвечает за импорт определенного типа данных из CSV-файлов.
+
+import_users: Импорт пользователей из файла 'static/data/users.csv'. Функция проверяет, существует ли пользователь с таким же email, и если нет, создает нового пользователя с данными из файла.  
+import_category: Импорт категорий из файла 'static/data/category.csv'. Если категория с таким же slug еще не существует, она будет создана.  
+import_genre: Импорт жанров из файла 'static/data/genre.csv'. Если жанр с таким же slug еще не существует, он будет создан.  
+import_title: Импорт произведений из файла 'static/data/titles.csv'. Создает новое произведение с указанными в файле параметрами.  
+import_review: Импорт отзывов из файла 'static/data/review.csv'. Создает отзывы на основе данных из файла.  
+import_genretitle: Создание связей между жанрами и произведениями. Для каждой записи в файле 'static/data/genre_title.csv' создается связь между жанром и произведением.  
+import_comment: Импорт комментариев из файла 'static/data/comments.csv'. Создает комментарии на основе данных из файла.  
+Запустите shell
+
+```
+python manage.py shell
+```
+Импортируйте функции
+
+```
+from import_data import import_users, import_category, import_genre, import_title, import_genretitle, import_review, import_comment
+```
+Запустите функции
+
+```
+import_users()
+import_category()
+import_genre()
+import_title()
+import_genretitle()
+import_review()
+import_comment()
+```
+
 **Запустить проект:**
 
 * для Linux:
