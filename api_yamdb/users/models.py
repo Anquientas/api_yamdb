@@ -32,7 +32,6 @@ class User(AbstractUser):
         max_length=150,
     )
     bio = models.TextField(
-        # verbose_name='О себе',?
         verbose_name='Биография',
         blank=True,
     )
@@ -51,7 +50,6 @@ class User(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-        # ordering = ('id',)?
         ordering = ('username',)
 
     @property

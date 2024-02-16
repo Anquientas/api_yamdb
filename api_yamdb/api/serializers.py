@@ -27,7 +27,7 @@ EMAIL_USE = 'Email "{email}" уже используется!'
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    #############################################################################################################################
+    """Сериализатор для отзывов на произведения."""
 
     author = SlugRelatedField(read_only=True, slug_field='username')
 
@@ -48,7 +48,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    #############################################################################################################################
+    """Сериализатор для комментариев к отзывам."""
 
     author = SlugRelatedField(read_only=True, slug_field='username')
 
@@ -75,7 +75,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleGetSerializer(serializers.ModelSerializer):
-    """Сериализатор произведений для метода GET."""
+    """Сериализатор произведений для чтения."""
 
     rating = serializers.IntegerField(read_only=True)
     category = CategorySerializer()
@@ -91,8 +91,8 @@ class TitleGetSerializer(serializers.ModelSerializer):
         return value
 
 
-class TitlePostSerializer(serializers.ModelSerializer):
-    """Сериализатор произведений для метода POST."""
+class TitleSerializer(serializers.ModelSerializer):
+    """Сериализатор для произведений."""
 
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),

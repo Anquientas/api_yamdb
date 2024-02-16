@@ -26,7 +26,7 @@ from .serializers import (
     SignUpSerializer,
     GetTokenSerializer,
     TitleGetSerializer,
-    TitlePostSerializer,
+    TitleSerializer,
 )
 from .utils import send_confirmation_code
 from reviews.models import Category, Genre, Review, Title
@@ -43,7 +43,7 @@ CODE_NOT_VALID = 'Неверный код подтверждения!'
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    #############################################################################################################################
+    """ViewSet для отзывов."""
 
     serializer_class = ReviewSerializer
     permission_classes = (
@@ -81,7 +81,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    #############################################################################################################################
+    """ViewSet для комментариев."""
 
     serializer_class = CommentSerializer
     permission_classes = (
@@ -139,7 +139,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return TitleGetSerializer
-        return TitlePostSerializer
+        return TitleSerializer
 
 
 class APISignUp(CreateAPIView):
