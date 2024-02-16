@@ -24,7 +24,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'django_filters',
-    # 'import_export',
     'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
     'users.apps.UsersConfig',
@@ -110,11 +109,6 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
 
-# User model
-
-AUTH_USER_MODEL = 'users.User'
-
-
 # Simple JWT
 
 REST_FRAMEWORK = {
@@ -126,9 +120,6 @@ REST_FRAMEWORK = {
         'user': '1000/min',
         'anon': '500/min',
     },
-    # 'DEFAULT_PERMISSION_CLASSES': [
-    #     'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    # ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
@@ -146,10 +137,11 @@ SIMPLE_JWT = {
 
 DEFAULT_FROM_EMAIL = 'api_yamdb@bacfend.ru'
 
-# Подключаем бэкенд filebased.EmailBackend:
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-# Или по умолчанию (?)
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-# Директория, в которую будут сохраняться файлы писем:
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
+
+
+# User model
+
+AUTH_USER_MODEL = 'users.User'
