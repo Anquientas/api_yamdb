@@ -12,12 +12,15 @@ class IsAdmin(BasePermission):
 
     def has_permission(self, request, view):
         return (
-            request.user.is_admin
-            or request.user.is_staff
+            request.user.is_authenticated
+            and (
+                request.user.is_admin
+                or request.user.is_staff
+            )
         )
 
 
-class IsAdminOrReadOnly(BasePermission):
+class IsAdminOrReadOnly(IsAdmin):
     """
     Класс определяющий права доступа к вьюсетам следующий образом:
     - создание нового объекта - доступно только администратору;
@@ -29,29 +32,11 @@ class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         return (
             request.method in SAFE_METHODS
-            or (
-                request.user.is_authenticated
-                and (
-                    request.user.is_admin
-                    or request.user.is_staff
-                )
-            )
-        )
-
-    def has_object_permission(self, request, view, obj):
-        return (
-            request.method in SAFE_METHODS
-            or (
-                request.user.is_authenticated
-                and (
-                    request.user.is_admin
-                    or request.user.is_staff
-                )
-            )
+            or super().has_permission(request, view)
         )
 
 
-class IsAuthenticatedToCreateOrAuthorOrModeratorOrAdminToChangeOrReadOnly(
+class IsAuthenticatedOrIsAuthorOrModeratorOrAdminOrReadOnly(
         BasePermission
 ):
     """
@@ -74,5 +59,4 @@ class IsAuthenticatedToCreateOrAuthorOrModeratorOrAdminToChangeOrReadOnly(
             or obj.author == request.user
             or request.user.is_admin
             or request.user.is_moderator
-            or request.user.is_staff
         )

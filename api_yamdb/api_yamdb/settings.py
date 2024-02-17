@@ -1,4 +1,7 @@
 from pathlib import Path
+from random import SystemRandom
+
+# from api.utils import generate_confirmation_code
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +29,6 @@ INSTALLED_APPS = [
     'django_filters',
     'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
-    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -120,6 +122,7 @@ REST_FRAMEWORK = {
         'user': '1000/min',
         'anon': '500/min',
     },
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.AllowAny', ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
@@ -144,4 +147,37 @@ EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
 # User model
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'reviews.User'
+
+
+# Generator confirmation code
+
+def generate_confirmation_code(
+    length=10,
+    allowed_chars=('abcdefghjkmnpqrstuvwxyz'
+                   'ABCDEFGHJKLMNPQRSTUVWXYZ'
+                   '123456789')
+):
+    """Функция генерации кода доступа."""
+
+    return ''.join(SystemRandom().choice(allowed_chars) for _ in range(length))
+
+
+# Constants of the project
+
+EXTRA_URL = 'me'
+
+MIN_GRADE = 1
+MAX_GRADE = 10
+
+MAX_LENGTH_EMAIL = 254
+MAX_LENGTH_FIRSTNAME = 150
+MAX_LENGTH_LASTNAME = 150
+MAX_LENGTH_NAME = 256
+MAX_LENGTH_SLUG = 50
+MAX_LENGTH_USERNAME = 150
+
+LENGTH_CONFIRMATION_CODE = 10
+# DEFAULT_CONFIRMATION_CODE = generate_confirmation_code(length=LENGTH_CONFIRMATION_CODE)
+
+

@@ -10,14 +10,11 @@
 
 ## Команда разработки проекта
 
-Владимир Матасов (тимлид) - реализация Auth/Users  
-ссылка на github: https://github.com/Anquientas/
+Владимир Матасов (тимлид, [ссылка на GitHub](https://github.com/Anquientas/)) - реализация Auth/Users
 
-Елена Альтман - реализация Categories/Genres/Titles/CSV (import)  
-ссылка на github: https://github.com/altmanhellen/
+Елена Альтман ([ссылка на GitHub](https://github.com/altmanhellen/)) - реализация Categories/Genres/Titles/CSV (import)
 
-Павел Гусев - реализация Review/Comments  
-ссылка на github: https://github.com/Pavel950/
+Павел Гусев ([ссылка на GitHub](https://github.com/Pavel950/)) - реализация Review/Comments  
 
 ## Стек проекта
 Python, Django, Django REST framework, SQLite  
@@ -162,7 +159,7 @@ import_comment()
 
 ## Документация
 
-Когда вы запустите проект, по адресу http://127.0.0.1:8000/redoc/ будет доступна документация для API YaMDb.
+Когда вы запустите проект, [по адресу](http://127.0.0.1:8000/redoc/) будет доступна документация для API YaMDb.
 
 ## Примеры запросов
 
