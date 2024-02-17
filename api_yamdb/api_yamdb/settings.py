@@ -1,8 +1,6 @@
 from pathlib import Path
 from random import SystemRandom
 
-# from api.utils import generate_confirmation_code
-
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -167,6 +165,8 @@ def generate_confirmation_code(
 
 EXTRA_URL = 'me'
 
+LENGTH_CONFIRMATION_CODE = 10
+
 MIN_GRADE = 1
 MAX_GRADE = 10
 
@@ -176,8 +176,3 @@ MAX_LENGTH_LASTNAME = 150
 MAX_LENGTH_NAME = 256
 MAX_LENGTH_SLUG = 50
 MAX_LENGTH_USERNAME = 150
-
-LENGTH_CONFIRMATION_CODE = 10
-# DEFAULT_CONFIRMATION_CODE = generate_confirmation_code(length=LENGTH_CONFIRMATION_CODE)
-
-

@@ -10,11 +10,11 @@
 
 ## Команда разработки проекта
 
-Владимир Матасов (тимлид, [ссылка на GitHub](https://github.com/Anquientas/)) - реализация Auth/Users
+Владимир Матасов (тимлид, [GitHub](https://github.com/Anquientas/)) - реализация Auth/Users
 
-Елена Альтман ([ссылка на GitHub](https://github.com/altmanhellen/)) - реализация Categories/Genres/Titles/CSV (import)
+Елена Альтман ([GitHub](https://github.com/altmanhellen/)) - реализация Categories/Genres/Titles/CSV (import)
 
-Павел Гусев ([ссылка на GitHub](https://github.com/Pavel950/)) - реализация Review/Comments  
+Павел Гусев ([GitHub](https://github.com/Pavel950/)) - реализация Review/Comments  
 
 ## Стек проекта
 Python, Django, Django REST framework, SQLite  
@@ -92,7 +92,17 @@ py manage.py migrate
 
 **Импортировать данные из CSV-файлов:**
 
-инструкция по импорту данных из CSV-файлов приведена в подразделе "Импорт данных из CSV-файлов"
+* для Linux:
+
+```
+python3 import_data.py
+```
+
+* для Windows:
+
+```
+py import_data.py
+```
 
 **Запустить проект:**
 
@@ -106,55 +116,6 @@ python3 manage.py runserver
 
 ```
 py manage.py runserver
-```
-
-## Импорт данных из CSV-файлов
-
-Для импорта данных в базу данных рекомендуется использовать приведенные ниже функции в соответствующем порядке. Каждая из них отвечает за импорт определенного типа данных из CSV-файла:
-
-* `import_users`
-* `import_category`
-* `import_genre`
-* `import_title`
-* `import_genretitle`
-* `import_review`
-* `import_comment`
-
-Функция `import_users` отвечает за импорт пользователей из файла `static/data/users.csv`. Она проверяет, существует ли пользователь с таким же email, и если нет, создает нового пользователя с данными из файла
-
-Функция `import_category` отвечает за импорт категорий из файла `static/data/category.csv`. Если категория с таким же slug еще не существует, она будет создана
-
-Функция `import_genre` отвечает за импорт жанров из файла `static/data/genre.csv`. Если жанр с таким же slug еще не существует, он будет создан
-
-Функция `import_title` отвечает за импорт произведений из файла `static/data/titles.csv`. Создает новое произведение с указанными в файле параметрами
-
-Функция `import_genretitle` отвечает за импорт связей между жанрами и произведениями из файла `static/data/genre_title.csv`
-
-Функция `import_review` отвечает за импорт отзывов из файла `static/data/review.csv`. Создает отзывы на основе данных из файла
-
-Функция `import_comment` отвечает за импорт из файла `static/data/comments.csv`. Создает комментарии на основе данных из файла 
-
-Для выполнения импорта данных необходимо:
-* запустить Shell:
-
-```
-python manage.py shell
-```
-* импортировать функции:
-
-```
-from import_data import import_users, import_category, import_genre, import_title, import_genretitle, import_review, import_comment
-```
-* вызвать функции:
-
-```
-import_users()
-import_category()
-import_genre()
-import_title()
-import_genretitle()
-import_review()
-import_comment()
 ```
 
 ## Документация
