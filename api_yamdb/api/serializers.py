@@ -6,8 +6,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from django.db.models import Avg
-
 from reviews.models import Comment, Review, Category, Genre, Title
 
 
@@ -20,6 +18,7 @@ from api_yamdb.settings import MIN_GRADE, MAX_GRADE, MAX_LENGTH_USERNAME, MAX_LE
 
 
 User = get_user_model()
+# if self.context['request'].method == 'POST':
 
 from api_yamdb.settings import LENGTH_CONFIRMATION_CODE
 
@@ -51,6 +50,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if self.context['request'].method == 'POST':
             author = self.context['request'].user
+            id = self.context['view'].kwargs.get('title_id')
             title = get_object_or_404(Title, id=id)
             if Review.objects.filter(author=author, title=title):
                 raise serializers.ValidationError(REVIEW_IS_ONE)
@@ -86,7 +86,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleGetSerializer(serializers.ModelSerializer):
     """Сериализатор произведений для чтения."""
 
-    # rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True)
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
 
@@ -94,13 +94,11 @@ class TitleGetSerializer(serializers.ModelSerializer):
         model = Title
         fields = (
             'id', 'name', 'year', 'description',
-            'category', 'genre',
-            'rating',
+            'rating', 'category', 'genre'
         )
         read_only_fields = (
             'id', 'name', 'year', 'description',
-            'category', 'genre',
-            'rating',
+            'rating', 'category', 'genre'
         )
 
     def validate_year(self, year):
@@ -113,15 +111,10 @@ class TitleGetSerializer(serializers.ModelSerializer):
             )
         return year
 
-    # def get_rating(self, obj):
-    #     average = obj.reviews.all().aggregate(Avg('score')).get('score__avg')
-    #     return int(average) if average is not None else None
-
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
-    # rating = serializers.SerializerMethodField()
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
@@ -138,7 +131,7 @@ class TitleSerializer(serializers.ModelSerializer):
             'id', 'name', 'year', 'description',
             'rating', 'category', 'genre'
         )
-        read_only_fields = ('id', 'rating')
+        read_only_fields = ('id',)
 
 
 class SignUpDataSerializer(serializers.Serializer):

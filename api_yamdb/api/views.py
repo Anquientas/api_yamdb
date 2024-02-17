@@ -72,8 +72,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title = self.get_title()
-        # if Review.objects.filter(author=self.request.user, title=title):
-        #     raise ValidationError(REVIEW_IS_ONE)
+    #     if Review.objects.filter(author=self.request.user, title=title):
+    #         raise ValidationError(REVIEW_IS_ONE)
         serializer.save(author=self.request.user, title=title)
         self.update_rating()
 
@@ -141,7 +141,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'delete', 'head', 'option', 'patch')
 
     def get_serializer_class(self):
-        print(self.action, self)
         if self.action in ('list', 'retrieve'):
             return TitleGetSerializer
         return TitleSerializer
