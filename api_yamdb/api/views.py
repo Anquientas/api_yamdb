@@ -1,7 +1,8 @@
-from django.db import IntegrityError
+
 from django.contrib.auth import get_user_model
-from django_filters.rest_framework import DjangoFilterBackend
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -45,6 +46,16 @@ User = get_user_model()
 CODE_NOT_VALID = 'Неверный код подтверждения!'
 
 
+def update_and_send_new_confirmation_code(user):
+    user.confirmation_code = generate_confirmation_code()
+    user.save()
+    send_confirmation_code(
+        user.email,
+        user.confirmation_code,
+        user.username
+    )
+
+
 class ReviewViewSet(viewsets.ModelViewSet):
     """ViewSet для отзывов."""
 
@@ -61,8 +72,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        title = self.get_title()
-        serializer.save(author=self.request.user, title=title)
+        serializer.save(
+            author=self.request.user,
+            title=self.get_title()
+        )
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -84,10 +97,10 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=self.get_review())
 
 
-class BaseViewSet(CreateModelMixin,
-                  DestroyModelMixin,
-                  ListModelMixin,
-                  viewsets.GenericViewSet):
+class BaseCategoryGenreViewSet(CreateModelMixin,
+                               DestroyModelMixin,
+                               ListModelMixin,
+                               viewsets.GenericViewSet):
     """Базовый ViewSet для категорий и жанров."""
 
     permission_classes = (IsAdminOrReadOnly,)
@@ -96,14 +109,14 @@ class BaseViewSet(CreateModelMixin,
     lookup_field = 'slug'
 
 
-class CategoryViewSet(BaseViewSet):
+class CategoryViewSet(BaseCategoryGenreViewSet):
     """ViewSet для категорий."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
-class GenreViewSet(BaseViewSet):
+class GenreViewSet(BaseCategoryGenreViewSet):
     """ViewSet для жанров."""
 
     queryset = Genre.objects.all()
@@ -138,13 +151,14 @@ class APISignUp(CreateAPIView):
             )
         except IntegrityError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        user.confirmation_code = generate_confirmation_code()
-        user.save()
-        send_confirmation_code(
-            user.email,
-            user.confirmation_code,
-            user.username
-        )
+        update_and_send_new_confirmation_code(user)
+        # user.confirmation_code = generate_confirmation_code()
+        # user.save()
+        # send_confirmation_code(
+        #     user.email,
+        #     user.confirmation_code,
+        #     user.username
+        # )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -164,6 +178,7 @@ class APIGetToken(CreateAPIView):
                 {'token': str(RefreshToken.for_user(user).access_token)},
                 status=status.HTTP_200_OK
             )
+        update_and_send_new_confirmation_code(user)
         return Response(
             {'confirmation_code': CODE_NOT_VALID},
             status=status.HTTP_400_BAD_REQUEST
@@ -189,9 +204,8 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def user_data(self, request):
         if request.method == 'GET':
-            serializer = UserAdminSerializer(request.user)
             return Response(
-                serializer.data,
+                UserAdminSerializer(request.user).data,
                 status=status.HTTP_200_OK
             )
         serializer = UserNotAdminSerializer(

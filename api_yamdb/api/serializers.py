@@ -1,7 +1,7 @@
 import datetime
 
-from django.db.models import Avg
 from django.contrib.auth import get_user_model
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
@@ -38,10 +38,12 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if self.context['request'].method == 'POST':
-            author = self.context['request'].user
-            id = self.context['view'].kwargs.get('title_id')
-            title = get_object_or_404(Title, id=id)
-            if Review.objects.filter(author=author, title=title):
+            if Review.objects.filter(
+                author=self.context['request'].user,
+                title=get_object_or_404(
+                    Title, id=self.context['view'].kwargs.get('title_id')
+                )
+            ):
                 raise serializers.ValidationError(REVIEW_IS_ONE)
         return data
 
@@ -108,7 +110,7 @@ class TitleGetSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
-    rating = serializers.SerializerMethodField()
+    # rating = serializers.SerializerMethodField()
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
@@ -123,13 +125,14 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
         fields = (
             'id', 'name', 'year', 'description',
-            'rating', 'category', 'genre'
+            'category', 'genre'
+            # 'rating', 'category', 'genre'
         )
-        read_only_fields = ('id',)
+        # read_only_fields = ('id',)
 
-    def get_rating(self, obj):
-        average = obj.reviews.all().aggregate(Avg('score')).get('score__avg')
-        return int(average) if average is not None else None
+    # def get_rating(self, obj):
+    #     average = obj.reviews.all().aggregate(Avg('score')).get('score__avg')
+    #     return int(average) if average is not None else None
 
 
 class SignUpDataSerializer(serializers.Serializer):
@@ -145,8 +148,8 @@ class SignUpDataSerializer(serializers.Serializer):
         max_length=MAX_LENGTH_EMAIL,
     )
 
-    def create(self, validated_data):
-        return User.objects.create(**validated_data)
+    # def create(self, validated_data):
+    #     return User.objects.create(**validated_data)
 
 
 class GetTokenSerializer(serializers.Serializer):
@@ -162,8 +165,8 @@ class GetTokenSerializer(serializers.Serializer):
         max_length=LENGTH_CONFIRMATION_CODE
     )
 
-    def create(self, validated_data):
-        return User.objects.create(**validated_data)
+    # def create(self, validated_data):
+    #     return User.objects.create(**validated_data)
 
 
 class UserAdminSerializer(serializers.ModelSerializer):
