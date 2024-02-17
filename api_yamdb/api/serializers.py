@@ -37,14 +37,15 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
     def validate(self, data):
-        if self.context['request'].method == 'POST':
-            if Review.objects.filter(
-                author=self.context['request'].user,
-                title=get_object_or_404(
-                    Title, id=self.context['view'].kwargs.get('title_id')
-                )
-            ):
-                raise serializers.ValidationError(REVIEW_IS_ONE)
+        if self.context['request'].method != 'POST':
+            return data
+        if Review.objects.filter(
+            author=self.context['request'].user,
+            title=get_object_or_404(
+                Title, id=self.context['view'].kwargs.get('title_id')
+            )
+        ):
+            raise serializers.ValidationError(REVIEW_IS_ONE)
         return data
 
 
@@ -88,7 +89,8 @@ class TitleGetSerializer(serializers.ModelSerializer):
             'rating', 'category', 'genre'
         )
         read_only_fields = (
-            'id', 'name', 'year', 'description',
+            # 'id', 'name', 'year', 'description',
+            'name', 'year', 'description',
             'category', 'genre'
         )
 

@@ -33,3 +33,13 @@ def send_confirmation_code(email, confirmation_code, username):
         recipient_list=(email,),
         fail_silently=False
     )
+
+
+def update_and_send_new_confirmation_code(user):
+    user.confirmation_code = generate_confirmation_code()
+    user.save()
+    send_confirmation_code(
+        user.email,
+        user.confirmation_code,
+        user.username
+    )

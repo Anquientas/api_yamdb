@@ -19,7 +19,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .filters import TitleFilter
 from .permissions import (
     IsAdminOrReadOnly,
-    IsAuthenticatedOrIsAuthorOrModeratorOrAdminOrReadOnly
+    IsAuthorOrIsModeratorOrIsAdminIsAuthenticatedOrReadOnly
 )
 from .serializers import (
     CategorySerializer,
@@ -33,7 +33,7 @@ from .serializers import (
     UserAdminSerializer,
     UserNotAdminSerializer
 )
-from .utils import send_confirmation_code, generate_confirmation_code
+from .utils import update_and_send_new_confirmation_code
 from api.permissions import IsAdmin
 from api_yamdb.settings import (
     USER_ENDPOINT_SUFFIX,
@@ -45,16 +45,8 @@ User = get_user_model()
 
 
 CODE_NOT_VALID = 'Неверный код подтверждения!'
-
-
-def update_and_send_new_confirmation_code(user):
-    user.confirmation_code = generate_confirmation_code()
-    user.save()
-    send_confirmation_code(
-        user.email,
-        user.confirmation_code,
-        user.username
-    )
+EMAIL_ERROR = 'Ошибка! Email "{email}" уже используется!'
+USERNAME_ERROR = 'Ошибка! Никнейм "{username}" уже используется!'
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -62,7 +54,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     serializer_class = ReviewSerializer
     permission_classes = (
-        IsAuthenticatedOrIsAuthorOrModeratorOrAdminOrReadOnly,
+        IsAuthorOrIsModeratorOrIsAdminIsAuthenticatedOrReadOnly,
     )
     http_method_names = ('delete', 'get', 'patch', 'post', 'head', 'options')
 
@@ -84,7 +76,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     serializer_class = CommentSerializer
     permission_classes = (
-        IsAuthenticatedOrIsAuthorOrModeratorOrAdminOrReadOnly,
+        IsAuthorOrIsModeratorOrIsAdminIsAuthenticatedOrReadOnly,
     )
     http_method_names = ['delete', 'get', 'patch', 'post', 'head', 'options']
 
@@ -145,21 +137,30 @@ class APISignUp(CreateAPIView):
     def post(self, request):
         serializer = SignUpDataSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        username = request.data.get('username')
+        email = request.data.get('email')
         try:
             user, create = User.objects.get_or_create(
-                username=request.data.get('username'),
-                email=request.data.get('email')
+                username=username,
+                email=email
             )
         except IntegrityError:
+            if User.objects.all().filter(username=username):
+                user = get_object_or_404(User, username=username)
+                if user.email != email:
+                    return Response(
+                        {'username': USERNAME_ERROR.format(username=username)},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            if User.objects.all().filter(email=email):
+                user = get_object_or_404(User, email=email)
+                if user.username != username:
+                    return Response(
+                        {'email': EMAIL_ERROR.format(email=email)},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
             return Response(status=status.HTTP_400_BAD_REQUEST)
         update_and_send_new_confirmation_code(user)
-        # user.confirmation_code = generate_confirmation_code()
-        # user.save()
-        # send_confirmation_code(
-        #     user.email,
-        #     user.confirmation_code,
-        #     user.username
-        # )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
