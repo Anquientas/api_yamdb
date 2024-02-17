@@ -1,9 +1,9 @@
+import re
+
 from django.core.exceptions import ValidationError
 
 from api_yamdb.settings import EXTRA_URL
 
-
-UNBANNED_SYMBOLS = '@.+-_'
 
 BANNED_SYNBOL_IN_USERNAME = (
     'Никнейм "{username}" содержит неразрешенные символы: "{symbols}"!'
@@ -16,16 +16,12 @@ def validate_username(username):
         raise ValidationError(
             {'username': USERNAME_NOT_ME},
         )
-    banned_symbols = set()
-    for symbol in username:
-        if not (symbol.isalnum() or UNBANNED_SYMBOLS.find(symbol) != -1):
-            banned_symbols.add(symbol)
-
+    banned_symbols = set(re.findall(r'[^\w.@+-]', username))
     if banned_symbols:
         raise ValidationError(
             {'username': BANNED_SYNBOL_IN_USERNAME.format(
                 username=username,
-                symbols=', '.join(banned_symbols)
+                symbols='", "'.join(banned_symbols)
             )},
         )
     return username

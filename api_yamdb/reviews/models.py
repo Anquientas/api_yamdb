@@ -8,14 +8,14 @@ from .validators import validate_username
 from api_yamdb.settings import (
     generate_confirmation_code,
     LENGTH_CONFIRMATION_CODE,
-    MAX_GRADE,
+    MAX_VALUE_GRADE,
     MAX_LENGTH_USERNAME,
     MAX_LENGTH_EMAIL,
     MAX_LENGTH_FIRSTNAME,
     MAX_LENGTH_LASTNAME,
     MAX_LENGTH_NAME,
     MAX_LENGTH_SLUG,
-    MIN_GRADE
+    MIN_VALUE_GRADE
 )
 
 
@@ -189,8 +189,8 @@ class Review(BaseCommentReviewModel):
     score = models.PositiveSmallIntegerField(
         'Оценка',
         validators=(
-            MinValueValidator(MIN_GRADE),
-            MaxValueValidator(MAX_GRADE)
+            MinValueValidator(MIN_VALUE_GRADE),
+            MaxValueValidator(MAX_VALUE_GRADE)
         )
     )
     title = models.ForeignKey(
