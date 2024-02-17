@@ -6,7 +6,6 @@ from django.db import models
 
 from .validators import validate_username
 from api_yamdb.settings import (
-    generate_confirmation_code,
     LENGTH_CONFIRMATION_CODE,
     MAX_VALUE_GRADE,
     MAX_LENGTH_USERNAME,
@@ -17,6 +16,7 @@ from api_yamdb.settings import (
     MAX_LENGTH_SLUG,
     MIN_VALUE_GRADE
 )
+from api.utils import generate_confirmation_code
 
 
 class UserRoles(models.TextChoices):
@@ -64,7 +64,7 @@ class User(AbstractUser):
     confirmation_code = models.CharField(
         verbose_name='Код подтверждения',
         max_length=LENGTH_CONFIRMATION_CODE,
-        default=generate_confirmation_code(length=LENGTH_CONFIRMATION_CODE)
+        default=generate_confirmation_code()
     )
 
     class Meta:

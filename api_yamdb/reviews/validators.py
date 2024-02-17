@@ -2,17 +2,17 @@ import re
 
 from django.core.exceptions import ValidationError
 
-from api_yamdb.settings import EXTRA_URL
+from api_yamdb.settings import USER_ENDPOINT_SUFFIX
 
 
 BANNED_SYNBOL_IN_USERNAME = (
     'Никнейм "{username}" содержит неразрешенные символы: "{symbols}"!'
 )
-USERNAME_NOT_ME = f'Использовать никнейм {EXTRA_URL} запрещено!'
+USERNAME_NOT_ME = f'Использовать никнейм {USER_ENDPOINT_SUFFIX} запрещено!'
 
 
 def validate_username(username):
-    if username == EXTRA_URL:
+    if username == USER_ENDPOINT_SUFFIX:
         raise ValidationError(
             {'username': USERNAME_NOT_ME},
         )

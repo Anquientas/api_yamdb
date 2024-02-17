@@ -1,4 +1,3 @@
-
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
@@ -34,9 +33,11 @@ from .serializers import (
     UserAdminSerializer,
     UserNotAdminSerializer
 )
-from .utils import send_confirmation_code
+from .utils import send_confirmation_code, generate_confirmation_code
 from api.permissions import IsAdmin
-from api_yamdb.settings import EXTRA_URL, generate_confirmation_code
+from api_yamdb.settings import (
+    USER_ENDPOINT_SUFFIX,
+)
 from reviews.models import Category, Genre, Review, Title
 
 
@@ -200,7 +201,7 @@ class UserViewSet(viewsets.ModelViewSet):
         methods=['GET', 'PATCH'],
         detail=False,
         permission_classes=(IsAuthenticated,),
-        url_path=EXTRA_URL,
+        url_path=USER_ENDPOINT_SUFFIX,
     )
     def user_data(self, request):
         if request.method == 'GET':
