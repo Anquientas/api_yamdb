@@ -1,10 +1,12 @@
+import os
+import django
 import csv
-from reviews.models import Category, Comment, Genre, Title, Review
-from users.models import User
 
 
 def import_users():
-    with open('static/data/users.csv', newline='') as csvfile:
+    with open('static/data/users.csv',
+              newline='',
+              encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             if User.objects.filter(email=row['email']).exists():
@@ -22,7 +24,9 @@ def import_users():
 
 
 def import_category():
-    with open('static/data/category.csv', newline='') as csvfile:
+    with open('static/data/category.csv',
+              newline='',
+              encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             slug = row['slug']
@@ -31,7 +35,9 @@ def import_category():
 
 
 def import_genre():
-    with open('static/data/genre.csv', newline='') as csvfile:
+    with open('static/data/genre.csv',
+              newline='',
+              encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             slug = row['slug']
@@ -40,7 +46,9 @@ def import_genre():
 
 
 def import_title():
-    with open('static/data/titles.csv', newline='') as csvfile:
+    with open('static/data/titles.csv',
+              newline='',
+              encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             category, _ = Category.objects.get_or_create(id=row['category'])
@@ -53,7 +61,9 @@ def import_title():
 
 
 def import_review():
-    with open('static/data/review.csv', newline='') as csvfile:
+    with open('static/data/review.csv',
+              newline='',
+              encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             author = User.objects.get(id=row['author'])
@@ -69,7 +79,9 @@ def import_review():
 
 
 def import_genretitle():
-    with open('static/data/genre_title.csv', newline='') as csvfile:
+    with open('static/data/genre_title.csv',
+              newline='',
+              encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             if not Title.objects.filter(id=row['title_id']).exists():
@@ -81,7 +93,9 @@ def import_genretitle():
 
 
 def import_comment():
-    with open('static/data/comments.csv', newline='') as csvfile:
+    with open('static/data/comments.csv',
+              newline='',
+              encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             author = User.objects.get(id=row['author'])
@@ -98,10 +112,32 @@ def import_comment():
             )
 
 
-import_users()
-import_category()
-import_genre()
-import_title()
-import_genretitle()
-import_review()
-import_comment()
+def main():
+    import_users()
+    import_category()
+    import_genre()
+    import_title()
+    import_genretitle()
+    import_review()
+    import_comment()
+
+
+if __name__ == '__main__':
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api_yamdb.settings')
+    django.setup()
+    try:
+        from reviews.models import (
+            Category,
+            Comment,
+            Genre,
+            Title,
+            Review,
+            User
+        )
+        main()
+    except ImportError as exc:
+        raise ImportError(
+            "Couldn't import Django. Are you sure it's installed and "
+            "available on your PYTHONPATH environment variable? Did you "
+            "forget to activate a virtual environment?"
+        ) from exc

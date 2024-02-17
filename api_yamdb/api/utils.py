@@ -1,7 +1,5 @@
 from django.core.mail import send_mail
 
-from api_yamdb.settings import DEFAULT_FROM_EMAIL
-
 
 MESSAGE = (
     'Здравствуйте, {username}!\n'
@@ -17,7 +15,7 @@ def send_confirmation_code(email, confirmation_code, username):
             username=username,
             confirmation_code=confirmation_code
         ),
-        from_email=DEFAULT_FROM_EMAIL,
+        from_email=None,
         recipient_list=(email,),
         fail_silently=False
     )
