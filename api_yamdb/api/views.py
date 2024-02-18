@@ -1,9 +1,10 @@
-from django.db import IntegrityError
+from random import choices
+
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
@@ -19,8 +20,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .filters import TitleFilter
 from .permissions import (
+    IsAdmin,
     IsAdminOrReadOnly,
-    IsAuthenticatedOrReadOnlyOrIsAuthorOrModeratorOrAdmin
+    AdminOrModeratorOrAuthorAllOrReadOnly
 )
 from .serializers import (
     CategorySerializer,
@@ -34,10 +36,12 @@ from .serializers import (
     UserAdminSerializer,
     UserNotAdminSerializer
 )
-from .utils import update_and_send_new_confirmation_code
-from api.permissions import IsAdmin
+from .utils import send_confirmation_code
 from api_yamdb.settings import (
+    LENGTH_CONFIRMATION_CODE,
+    SYMBOLS_CONFIRMATION_CODE,
     USER_ENDPOINT_SUFFIX,
+
 )
 from reviews.models import Category, Genre, Review, Title
 
@@ -45,18 +49,28 @@ from reviews.models import Category, Genre, Review, Title
 User = get_user_model()
 
 
-CODE_NOT_VALID = 'Неверный код подтверждения!'
+CODE_NOT_VALID = 'Ваш код подтверждения не действителен! Получите его заново.'
 EMAIL_ERROR = 'Ошибка! Email "{email}" уже используется!'
 USERNAME_ERROR = 'Ошибка! Никнейм "{username}" уже используется!'
+
+
+def generate_confirmation_code(
+        length=LENGTH_CONFIRMATION_CODE,
+        allowed_chars=SYMBOLS_CONFIRMATION_CODE
+):
+    """Функция генерации кода доступа."""
+
+    return ''.join(choices(
+        allowed_chars,
+        k=length
+    ))
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """ViewSet для отзывов."""
 
     serializer_class = ReviewSerializer
-    permission_classes = (
-        IsAuthenticatedOrReadOnlyOrIsAuthorOrModeratorOrAdmin,
-    )
+    permission_classes = (AdminOrModeratorOrAuthorAllOrReadOnly,)
     http_method_names = ('delete', 'get', 'patch', 'post', 'head', 'options')
 
     def get_title(self):
@@ -76,10 +90,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     """ViewSet для комментариев."""
 
     serializer_class = CommentSerializer
-    permission_classes = (
-        IsAuthenticatedOrReadOnlyOrIsAuthorOrModeratorOrAdmin,
-    )
-    http_method_names = ['delete', 'get', 'patch', 'post', 'head', 'options']
+    permission_classes = (AdminOrModeratorOrAuthorAllOrReadOnly,)
+    http_method_names = ('delete', 'get', 'patch', 'post', 'head', 'options')
 
     def get_review(self):
         return get_object_or_404(Review, id=self.kwargs.get('review_id'))
@@ -120,7 +132,8 @@ class GenreViewSet(BaseDescriptionViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     """ViewSet для произведений."""
 
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
+
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -146,22 +159,23 @@ class APISignUp(CreateAPIView):
                 email=email
             )
         except IntegrityError:
-            if User.objects.all().filter(username=username):
-                user = get_object_or_404(User, username=username)
-                if user.email != email:
-                    return Response(
-                        {'username': USERNAME_ERROR.format(username=username)},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-            if User.objects.all().filter(email=email):
-                user = get_object_or_404(User, email=email)
-                if user.username != username:
-                    return Response(
-                        {'email': EMAIL_ERROR.format(email=email)},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        update_and_send_new_confirmation_code(user)
+            if User.objects.filter(username=username):
+                return Response(
+                    {'email': EMAIL_ERROR.format(email=email)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if User.objects.filter(email=email):
+                return Response(
+                    {'username': USERNAME_ERROR.format(username=username)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        user.confirmation_code = generate_confirmation_code()
+        user.save()
+        send_confirmation_code(
+            user.email,
+            user.confirmation_code,
+            user.username
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -181,7 +195,8 @@ class APIGetToken(CreateAPIView):
                 {'token': str(RefreshToken.for_user(user).access_token)},
                 status=status.HTTP_200_OK
             )
-        update_and_send_new_confirmation_code(user)
+        user.confirmation_code = generate_confirmation_code()
+        user.save()
         return Response(
             {'confirmation_code': CODE_NOT_VALID},
             status=status.HTTP_400_BAD_REQUEST

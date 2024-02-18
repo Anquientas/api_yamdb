@@ -1,4 +1,5 @@
 from pathlib import Path
+from string import ascii_letters, digits
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -135,7 +136,8 @@ SIMPLE_JWT = {
 
 # E-mail backend
 
-DEFAULT_FROM_EMAIL = 'api_yamdb@bacfend.ru'
+FROM_EMAIL = 'api_yamdb@bacfend.ru'
+DEFAULT_FROM_EMAIL = FROM_EMAIL
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
@@ -152,6 +154,7 @@ AUTH_USER_MODEL = 'reviews.User'
 USER_ENDPOINT_SUFFIX = 'me'
 
 LENGTH_CONFIRMATION_CODE = 10
+SYMBOLS_CONFIRMATION_CODE = ascii_letters + digits,
 
 MAX_VALUE_SCORE = 10
 MIN_VALUE_SCORE = 1

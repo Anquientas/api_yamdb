@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .validators import validate_username, validate_current_year
+from .validators import validate_username
 from api_yamdb.settings import (
     LENGTH_CONFIRMATION_CODE,
     MAX_VALUE_SCORE,
@@ -14,7 +14,7 @@ from api_yamdb.settings import (
     MAX_LENGTH_SLUG,
     MIN_VALUE_SCORE
 )
-from api.utils import generate_confirmation_code
+from api.utils import current_year
 
 
 class UserRoles(models.TextChoices):
@@ -62,7 +62,6 @@ class User(AbstractUser):
     confirmation_code = models.CharField(
         verbose_name='Код подтверждения',
         max_length=LENGTH_CONFIRMATION_CODE,
-        default=generate_confirmation_code()
     )
 
     class Meta:
@@ -135,8 +134,8 @@ class Title(models.Model):
         verbose_name='Название'
     )
     year = models.IntegerField(
-        validators=(validate_current_year,),
-        verbose_name='Год выпуска'
+        validators=(MaxValueValidator(limit_value=current_year),),
+        verbose_name='Год выпуска',
     )
     description = models.TextField(
         blank=True,

@@ -1,9 +1,8 @@
-import string
-import random
+import datetime
 
 from django.core.mail import send_mail
 
-from api_yamdb.settings import LENGTH_CONFIRMATION_CODE
+from api_yamdb.settings import FROM_EMAIL
 
 
 MESSAGE = (
@@ -29,17 +28,11 @@ def send_confirmation_code(email, confirmation_code, username):
             username=username,
             confirmation_code=confirmation_code
         ),
-        from_email=None,
+        from_email=FROM_EMAIL,
         recipient_list=(email,),
         fail_silently=False
     )
 
 
-def update_and_send_new_confirmation_code(user):
-    user.confirmation_code = generate_confirmation_code()
-    user.save()
-    send_confirmation_code(
-        user.email,
-        user.confirmation_code,
-        user.username
-    )
+def current_year():
+    return datetime.date.today().year
