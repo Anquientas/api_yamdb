@@ -9,9 +9,6 @@ BANNED_SYNBOL_IN_USERNAME = (
     'Никнейм "{username}" содержит неразрешенные символы:\n{symbols}'
 )
 USERNAME_NOT_ME = f'Использовать никнейм {USER_ENDPOINT_SUFFIX} запрещено!'
-YEAR_MORE_CURRENT = (
-    'Год выпуска {year} не может быть больше текущего {current_year}!'
-)
 
 
 def validate_username(username):

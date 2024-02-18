@@ -11,6 +11,15 @@ MESSAGE = (
 )
 
 
+def generate_confirmation_code(length=LENGTH_CONFIRMATION_CODE):
+    """Функция генерации кода доступа."""
+
+    return ''.join(random.choices(
+        string.ascii_letters + string.digits,
+        k=length
+    ))
+
+
 def send_confirmation_code(email, confirmation_code, username):
     """Функция отправки кода подтверждения на почту."""
     send_mail(
