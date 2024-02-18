@@ -82,6 +82,10 @@ class TitleGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
+        fields = (
+            'id', 'name', 'year', 'description',
+            'rating', 'category', 'genre'
+        )
         read_only_fields = (
             'id', 'name', 'year', 'description',
             'category', 'genre'
@@ -96,6 +100,7 @@ class TitleGetSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
+    rating = serializers.SerializerMethodField()
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',

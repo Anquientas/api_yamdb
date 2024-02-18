@@ -5,6 +5,7 @@ from django.core.mail import send_mail
 
 from api_yamdb.settings import LENGTH_CONFIRMATION_CODE
 
+
 MESSAGE = (
     'Здравствуйте, {username}!\n'
     'Ваш код доступа к API_YaMDb: {confirmation_code}'
