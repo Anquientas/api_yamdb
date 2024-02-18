@@ -169,7 +169,6 @@ class APISignUp(CreateAPIView):
                     {'username': USERNAME_ERROR.format(username=username)},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            # return Response(status=status.HTTP_400_BAD_REQUES)
         user.confirmation_code = generate_confirmation_code()
         user.save()
         send_confirmation_code(
