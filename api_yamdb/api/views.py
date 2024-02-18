@@ -19,7 +19,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .filters import TitleFilter
 from .permissions import (
     IsAdminOrReadOnly,
-    IsAuthorOrIsModeratorOrIsAdminIsAuthenticatedOrReadOnly
+    IsAuthenticatedOrReadOnlyOrIsAuthorOrModeratorOrAdmin
 )
 from .serializers import (
     CategorySerializer,
@@ -54,7 +54,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     serializer_class = ReviewSerializer
     permission_classes = (
-        IsAuthorOrIsModeratorOrIsAdminIsAuthenticatedOrReadOnly,
+        IsAuthenticatedOrReadOnlyOrIsAuthorOrModeratorOrAdmin,
     )
     http_method_names = ('delete', 'get', 'patch', 'post', 'head', 'options')
 
@@ -76,7 +76,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     serializer_class = CommentSerializer
     permission_classes = (
-        IsAuthorOrIsModeratorOrIsAdminIsAuthenticatedOrReadOnly,
+        IsAuthenticatedOrReadOnlyOrIsAuthorOrModeratorOrAdmin,
     )
     http_method_names = ['delete', 'get', 'patch', 'post', 'head', 'options']
 
@@ -90,10 +90,10 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=self.get_review())
 
 
-class BaseCategoryGenreViewSet(CreateModelMixin,
-                               DestroyModelMixin,
-                               ListModelMixin,
-                               viewsets.GenericViewSet):
+class BaseDescriptionViewSet(CreateModelMixin,
+                             DestroyModelMixin,
+                             ListModelMixin,
+                             viewsets.GenericViewSet):
     """Базовый ViewSet для категорий и жанров."""
 
     permission_classes = (IsAdminOrReadOnly,)
@@ -102,14 +102,14 @@ class BaseCategoryGenreViewSet(CreateModelMixin,
     lookup_field = 'slug'
 
 
-class CategoryViewSet(BaseCategoryGenreViewSet):
+class CategoryViewSet(BaseDescriptionViewSet):
     """ViewSet для категорий."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
-class GenreViewSet(BaseCategoryGenreViewSet):
+class GenreViewSet(BaseDescriptionViewSet):
     """ViewSet для жанров."""
 
     queryset = Genre.objects.all()

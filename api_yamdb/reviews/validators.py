@@ -1,5 +1,8 @@
 import re
 
+import datetime
+from django.utils import timezone
+
 from django.core.exceptions import ValidationError
 
 from api_yamdb.settings import USER_ENDPOINT_SUFFIX
@@ -9,6 +12,9 @@ BANNED_SYNBOL_IN_USERNAME = (
     'Никнейм "{username}" содержит неразрешенные символы: "{symbols}"!'
 )
 USERNAME_NOT_ME = f'Использовать никнейм {USER_ENDPOINT_SUFFIX} запрещено!'
+YEAR_MORE_CURRENT = (
+    'Год выпуска {year} не может быть больше текущего {current_year}!'
+)
 
 
 def validate_username(username):
@@ -25,3 +31,12 @@ def validate_username(username):
             )},
         )
     return username
+
+
+def validate_current_year(year):
+    current_year = timezone.now().year
+    if year > current_year:
+        raise ValidationError(YEAR_MORE_CURRENT.format(
+            year=year,
+            current_year=datetime.date.today().year
+        ))

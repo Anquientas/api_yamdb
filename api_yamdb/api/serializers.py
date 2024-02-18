@@ -1,5 +1,3 @@
-import datetime
-
 from django.contrib.auth import get_user_model
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
@@ -84,35 +82,20 @@ class TitleGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = (
-            'id', 'name', 'year', 'description',
-            'rating', 'category', 'genre'
-        )
         read_only_fields = (
-            # 'id', 'name', 'year', 'description',
-            'name', 'year', 'description',
+            'id', 'name', 'year', 'description',
             'category', 'genre'
         )
-
-    def validate_year(self, year):
-        if year > datetime.date.today().year:
-            raise serializers.ValidationError(
-                YEAR_MORE_CURRENT.format(
-                    year=year,
-                    current_year=datetime.date.today().year
-                )
-            )
-        return year
+        fields = read_only_fields + ('rating',)
 
     def get_rating(self, obj):
-        average = obj.reviews.all().aggregate(Avg('score')).get('score__avg')
+        average = obj.reviews.aggregate(Avg('score')).get('score__avg')
         return int(average) if average is not None else None
 
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
-    # rating = serializers.SerializerMethodField()
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
@@ -128,13 +111,7 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'year', 'description',
             'category', 'genre'
-            # 'rating', 'category', 'genre'
         )
-        # read_only_fields = ('id',)
-
-    # def get_rating(self, obj):
-    #     average = obj.reviews.all().aggregate(Avg('score')).get('score__avg')
-    #     return int(average) if average is not None else None
 
 
 class SignUpDataSerializer(serializers.Serializer):
@@ -150,9 +127,6 @@ class SignUpDataSerializer(serializers.Serializer):
         max_length=MAX_LENGTH_EMAIL,
     )
 
-    # def create(self, validated_data):
-    #     return User.objects.create(**validated_data)
-
 
 class GetTokenSerializer(serializers.Serializer):
     """Сериализатор для данных пользователя при получении токена."""
@@ -166,9 +140,6 @@ class GetTokenSerializer(serializers.Serializer):
         required=True,
         max_length=LENGTH_CONFIRMATION_CODE
     )
-
-    # def create(self, validated_data):
-    #     return User.objects.create(**validated_data)
 
 
 class UserAdminSerializer(serializers.ModelSerializer):

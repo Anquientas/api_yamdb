@@ -29,7 +29,7 @@ class IsAdminOrReadOnly(IsAdmin):
         )
 
 
-class IsAuthorOrIsModeratorOrIsAdminIsAuthenticatedOrReadOnly(
+class IsAuthenticatedOrReadOnlyOrIsAuthorOrModeratorOrAdmin(
     BasePermission
 ):
     """
