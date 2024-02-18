@@ -28,12 +28,3 @@ def validate_username(username):
             )},
         )
     return username
-
-
-def validate_current_year(year):
-    current_year = timezone.now().year
-    if year > current_year:
-        raise ValidationError(YEAR_MORE_CURRENT.format(
-            year=year,
-            current_year=datetime.date.today().year
-        ))
