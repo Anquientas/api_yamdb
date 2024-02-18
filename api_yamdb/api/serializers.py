@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Avg
+# from django.db.models import Avg
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
@@ -23,6 +24,7 @@ REVIEW_IS_ONE = (
     'Пользователь не может оставить более одного отзыва '
     'на каждое произведение.'
 )
+USERNAME_USE = 'Пользователь с никнеймом {username} уже используется!'
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -76,27 +78,22 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleGetSerializer(serializers.ModelSerializer):
     """Сериализатор произведений для чтения."""
 
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField()
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
 
     class Meta:
         model = Title
-        read_only_fields = (
+        fields = (
             'id', 'name', 'year', 'description',
-            'category', 'genre'
+            'rating', 'category', 'genre'
         )
-        fields = read_only_fields + ('rating',)
-
-    def get_rating(self, obj):
-        average = obj.reviews.aggregate(Avg('score')).get('score__avg')
-        return int(average) if average is not None else None
+        read_only_fields = fields
 
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для произведений."""
 
-    rating = serializers.SerializerMethodField()
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
@@ -113,6 +110,15 @@ class TitleSerializer(serializers.ModelSerializer):
             'id', 'name', 'year', 'description',
             'category', 'genre'
         )
+
+    def validate_year(self, year):
+        current_year = timezone.now().year
+        if year > current_year:
+            raise serializers.ValidationError(YEAR_MORE_CURRENT.format(
+                year=year,
+                current_year=current_year
+            ))
+        return year
 
 
 class SignUpDataSerializer(serializers.Serializer):
@@ -151,6 +157,14 @@ class UserAdminSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
+
+    def validate_username(self, username):
+        if User.objects.filter(username=username):
+            raise serializers.ValidationError(
+                USERNAME_USE.format(username=username)
+            )
+        username = validate_username(username)
+        return username
 
 
 class UserNotAdminSerializer(UserAdminSerializer):
