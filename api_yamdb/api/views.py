@@ -38,10 +38,10 @@ from .serializers import (
 )
 from .utils import send_confirmation_code
 from api_yamdb.settings import (
+    DEFAULT_CONFIRMATION_CODE,
     LENGTH_CONFIRMATION_CODE,
     SYMBOLS_CONFIRMATION_CODE,
     USER_ENDPOINT_SUFFIX,
-
 )
 from reviews.models import Category, Genre, Review, Title
 
@@ -52,18 +52,6 @@ User = get_user_model()
 CODE_NOT_VALID = 'Ваш код подтверждения не действителен! Получите его заново.'
 EMAIL_ERROR = 'Ошибка! Email "{email}" уже используется!'
 USERNAME_ERROR = 'Ошибка! Никнейм "{username}" уже используется!'
-
-
-def generate_confirmation_code(
-        length=LENGTH_CONFIRMATION_CODE,
-        allowed_chars=SYMBOLS_CONFIRMATION_CODE
-):
-    """Функция генерации кода доступа."""
-
-    return ''.join(choices(
-        allowed_chars,
-        k=length
-    ))
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -132,7 +120,9 @@ class GenreViewSet(BaseDescriptionViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     """ViewSet для произведений."""
 
-    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')
+    ).order_by('name')
 
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
@@ -159,17 +149,20 @@ class APISignUp(CreateAPIView):
                 email=email
             )
         except IntegrityError:
-            if User.objects.filter(username=username):
+            if User.objects.filter(username=username).exists():
                 return Response(
                     {'email': EMAIL_ERROR.format(email=email)},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            if User.objects.filter(email=email):
+            if User.objects.filter(email=email).exists():
                 return Response(
                     {'username': USERNAME_ERROR.format(username=username)},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        user.confirmation_code = generate_confirmation_code()
+        user.confirmation_code = ''.join(choices(
+            SYMBOLS_CONFIRMATION_CODE,
+            k=LENGTH_CONFIRMATION_CODE
+        ))
         user.save()
         send_confirmation_code(
             user.email,
@@ -190,13 +183,15 @@ class APIGetToken(CreateAPIView):
             'confirmation_code'
         )
         user = get_object_or_404(User, username=username)
-        if confirmation_code == user.confirmation_code:
-            return Response(
-                {'token': str(RefreshToken.for_user(user).access_token)},
-                status=status.HTTP_200_OK
-            )
-        user.confirmation_code = generate_confirmation_code()
-        user.save()
+        if user.confirmation_code != DEFAULT_CONFIRMATION_CODE:
+            if confirmation_code == user.confirmation_code:
+                return Response(
+                    {'token': str(RefreshToken.for_user(user).access_token)},
+                    status=status.HTTP_200_OK
+                )
+            if user.confirmation_code != DEFAULT_CONFIRMATION_CODE:
+                user.confirmation_code = DEFAULT_CONFIRMATION_CODE
+                user.save()
         return Response(
             {'confirmation_code': CODE_NOT_VALID},
             status=status.HTTP_400_BAD_REQUEST

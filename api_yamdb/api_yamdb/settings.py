@@ -1,4 +1,5 @@
 from pathlib import Path
+from random import choices
 from string import ascii_letters, digits
 
 
@@ -155,6 +156,11 @@ USER_ENDPOINT_SUFFIX = 'me'
 
 LENGTH_CONFIRMATION_CODE = 10
 SYMBOLS_CONFIRMATION_CODE = ascii_letters + digits,
+
+DEFAULT_CONFIRMATION_CODE = ''.join(choices(
+    SYMBOLS_CONFIRMATION_CODE,
+    k=LENGTH_CONFIRMATION_CODE + 1
+))
 
 MAX_VALUE_SCORE = 10
 MIN_VALUE_SCORE = 1
