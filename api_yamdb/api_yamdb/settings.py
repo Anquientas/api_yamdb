@@ -148,27 +148,14 @@ EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 AUTH_USER_MODEL = 'reviews.User'
 
 
-# Generator confirmation code
-
-def generate_confirmation_code(
-    length=10,
-    allowed_chars=('abcdefghjkmnpqrstuvwxyz'
-                   'ABCDEFGHJKLMNPQRSTUVWXYZ'
-                   '123456789')
-):
-    """Функция генерации кода доступа."""
-
-    return ''.join(SystemRandom().choice(allowed_chars) for _ in range(length))
-
-
 # Constants of the project
 
-EXTRA_URL = 'me'
+USER_ENDPOINT_SUFFIX = 'me'
 
 LENGTH_CONFIRMATION_CODE = 10
 
-MIN_GRADE = 1
-MAX_GRADE = 10
+MAX_VALUE_SCORE = 10
+MIN_VALUE_SCORE = 1
 
 MAX_LENGTH_EMAIL = 254
 MAX_LENGTH_FIRSTNAME = 150

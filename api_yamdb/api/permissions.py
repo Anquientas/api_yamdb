@@ -2,20 +2,13 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
 class IsAdmin(BasePermission):
-    """
-    Класс определяющий права доступа к вьюсетам следующий образом:
-    - создание нового объекта - доступно только администратору;
-    - получение списка объектов - доступно только администратору;
-    - получение отдельного объекта - доступно только администратору;
-    - изменение/удаление отдельного объекта - доступно только администратору.
-    """
+    """Класс администратора."""
 
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
             and (
                 request.user.is_admin
-                or request.user.is_staff
             )
         )
 
@@ -36,8 +29,8 @@ class IsAdminOrReadOnly(IsAdmin):
         )
 
 
-class IsAuthenticatedOrIsAuthorOrModeratorOrAdminOrReadOnly(
-        BasePermission
+class IsAuthenticatedOrReadOnlyOrIsAuthorOrModeratorOrAdmin(
+    BasePermission
 ):
     """
     Класс определяющий права доступа к вьюсетам следующий образом:
