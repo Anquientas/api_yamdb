@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -14,7 +16,10 @@ from api_yamdb.settings import (
     MAX_LENGTH_SLUG,
     MIN_VALUE_SCORE
 )
-from api.utils import current_year
+
+
+def current_year():
+    return datetime.date.today().year
 
 
 class UserRoles(models.TextChoices):

@@ -1,5 +1,3 @@
-import datetime
-
 from django.core.mail import send_mail
 
 from api_yamdb.settings import FROM_EMAIL
@@ -23,7 +21,3 @@ def send_confirmation_code(email, confirmation_code, username):
         recipient_list=(email,),
         fail_silently=False
     )
-
-
-def current_year():
-    return datetime.date.today().year

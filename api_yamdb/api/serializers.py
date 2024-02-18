@@ -23,7 +23,6 @@ REVIEW_IS_ONE = (
     'Пользователь не может оставить более одного отзыва '
     'на каждое произведение.'
 )
-USERNAME_USE = 'Пользователь с никнеймом {username} уже используется!'
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -158,12 +157,7 @@ class UserAdminSerializer(serializers.ModelSerializer):
         )
 
     def validate_username(self, username):
-        if User.objects.filter(username=username):
-            raise serializers.ValidationError(
-                USERNAME_USE.format(username=username)
-            )
-        username = validate_username(username)
-        return username
+        return validate_username(username)
 
 
 class UserNotAdminSerializer(UserAdminSerializer):
