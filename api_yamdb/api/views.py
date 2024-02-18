@@ -159,12 +159,12 @@ class APISignUp(CreateAPIView):
                 email=email
             )
         except IntegrityError:
-            if User.objects.filter(username=username).first():
+            if User.objects.filter(username=username):
                 return Response(
                     {'email': EMAIL_ERROR.format(email=email)},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            if User.objects.filter(email=email).first():
+            if User.objects.filter(email=email):
                 return Response(
                     {'username': USERNAME_ERROR.format(username=username)},
                     status=status.HTTP_400_BAD_REQUEST
