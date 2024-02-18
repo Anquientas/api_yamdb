@@ -1,22 +1,20 @@
-import datetime
-
-from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 
-from .validators import validate_username
+from .validators import validate_username, validate_current_year
 from api_yamdb.settings import (
-    generate_confirmation_code,
     LENGTH_CONFIRMATION_CODE,
-    MAX_GRADE,
+    MAX_VALUE_SCORE,
     MAX_LENGTH_USERNAME,
     MAX_LENGTH_EMAIL,
     MAX_LENGTH_FIRSTNAME,
     MAX_LENGTH_LASTNAME,
     MAX_LENGTH_NAME,
     MAX_LENGTH_SLUG,
-    MIN_GRADE
+    MIN_VALUE_SCORE
 )
+from api.utils import generate_confirmation_code
 
 
 class UserRoles(models.TextChoices):
@@ -64,7 +62,7 @@ class User(AbstractUser):
     confirmation_code = models.CharField(
         verbose_name='Код подтверждения',
         max_length=LENGTH_CONFIRMATION_CODE,
-        default=generate_confirmation_code(length=LENGTH_CONFIRMATION_CODE)
+        default=generate_confirmation_code()
     )
 
     class Meta:
@@ -93,7 +91,7 @@ class User(AbstractUser):
         )
 
 
-class BaseCategoryGenreModel(models.Model):
+class BaseDescriptionModel(models.Model):
     """Базовый класс для классов жанра и категории."""
 
     name = models.CharField(
@@ -113,18 +111,18 @@ class BaseCategoryGenreModel(models.Model):
         return self.name
 
 
-class Category(BaseCategoryGenreModel):
+class Category(BaseDescriptionModel):
     """Класс категории."""
 
-    class Meta:
+    class Meta(BaseDescriptionModel.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
 
-class Genre(BaseCategoryGenreModel):
+class Genre(BaseDescriptionModel):
     """Класс жанра."""
 
-    class Meta:
+    class Meta(BaseDescriptionModel.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
@@ -137,9 +135,7 @@ class Title(models.Model):
         verbose_name='Название'
     )
     year = models.IntegerField(
-        validators=[
-            MaxValueValidator(limit_value=datetime.date.today().year),
-        ],
+        validators=(validate_current_year,),
         verbose_name='Год выпуска'
     )
     description = models.TextField(
@@ -168,11 +164,11 @@ class Title(models.Model):
         return self.name
 
 
-class BaseCommentReviewModel(models.Model):
+class BaseDiscussionModel(models.Model):
     """Базовый класс для классов комментария и отзыва."""
     text = models.TextField('Текст')
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE)
+        User, on_delete=models.CASCADE, related_name='%(class)ss')
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
     class Meta:
@@ -183,20 +179,22 @@ class BaseCommentReviewModel(models.Model):
         return self.text[:30]
 
 
-class Review(BaseCommentReviewModel):
+class Review(BaseDiscussionModel):
     """Класс отзыва."""
 
     score = models.PositiveSmallIntegerField(
         'Оценка',
         validators=(
-            MinValueValidator(MIN_GRADE),
-            MaxValueValidator(MAX_GRADE)
+            MinValueValidator(MIN_VALUE_SCORE),
+            MaxValueValidator(MAX_VALUE_SCORE)
         )
     )
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews')
 
-    class Meta:
+    class Meta(BaseDiscussionModel.Meta):
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
         constraints = [
             models.UniqueConstraint(
                 fields=['author', 'title'],
@@ -205,8 +203,12 @@ class Review(BaseCommentReviewModel):
         ]
 
 
-class Comment(BaseCommentReviewModel):
+class Comment(BaseDiscussionModel):
     """Класс комментария."""
 
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE, related_name='comments')
+
+    class Meta(BaseDiscussionModel.Meta):
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'

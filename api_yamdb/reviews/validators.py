@@ -1,31 +1,42 @@
+import re
+
+import datetime
+from django.utils import timezone
+
 from django.core.exceptions import ValidationError
 
-from api_yamdb.settings import EXTRA_URL
+from api_yamdb.settings import USER_ENDPOINT_SUFFIX
 
-
-UNBANNED_SYMBOLS = '@.+-_'
 
 BANNED_SYNBOL_IN_USERNAME = (
     'Никнейм "{username}" содержит неразрешенные символы: "{symbols}"!'
 )
-USERNAME_NOT_ME = f'Использовать никнейм {EXTRA_URL} запрещено!'
+USERNAME_NOT_ME = f'Использовать никнейм {USER_ENDPOINT_SUFFIX} запрещено!'
+YEAR_MORE_CURRENT = (
+    'Год выпуска {year} не может быть больше текущего {current_year}!'
+)
 
 
 def validate_username(username):
-    if username == EXTRA_URL:
+    if username == USER_ENDPOINT_SUFFIX:
         raise ValidationError(
             {'username': USERNAME_NOT_ME},
         )
-    banned_symbols = set()
-    for symbol in username:
-        if not (symbol.isalnum() or UNBANNED_SYMBOLS.find(symbol) != -1):
-            banned_symbols.add(symbol)
-
+    banned_symbols = set(re.findall(r'[^\w.@+-]', username))
     if banned_symbols:
         raise ValidationError(
             {'username': BANNED_SYNBOL_IN_USERNAME.format(
                 username=username,
-                symbols=', '.join(banned_symbols)
+                symbols='", "'.join(banned_symbols)
             )},
         )
     return username
+
+
+def validate_current_year(year):
+    current_year = timezone.now().year
+    if year > current_year:
+        raise ValidationError(YEAR_MORE_CURRENT.format(
+            year=year,
+            current_year=datetime.date.today().year
+        ))

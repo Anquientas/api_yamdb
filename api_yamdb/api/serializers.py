@@ -1,7 +1,5 @@
-import datetime
-
-from django.db.models import Avg
 from django.contrib.auth import get_user_model
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
@@ -37,12 +35,15 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
     def validate(self, data):
-        if self.context['request'].method == 'POST':
-            author = self.context['request'].user
-            id = self.context['view'].kwargs.get('title_id')
-            title = get_object_or_404(Title, id=id)
-            if Review.objects.filter(author=author, title=title):
-                raise serializers.ValidationError(REVIEW_IS_ONE)
+        if self.context['request'].method != 'POST':
+            return data
+        if Review.objects.filter(
+            author=self.context['request'].user,
+            title=get_object_or_404(
+                Title, id=self.context['view'].kwargs.get('title_id')
+            )
+        ):
+            raise serializers.ValidationError(REVIEW_IS_ONE)
         return data
 
 
@@ -81,27 +82,14 @@ class TitleGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = (
-            'id', 'name', 'year', 'description',
-            'rating', 'category', 'genre'
-        )
         read_only_fields = (
             'id', 'name', 'year', 'description',
             'category', 'genre'
         )
-
-    def validate_year(self, year):
-        if year > datetime.date.today().year:
-            raise serializers.ValidationError(
-                YEAR_MORE_CURRENT.format(
-                    year=year,
-                    current_year=datetime.date.today().year
-                )
-            )
-        return year
+        fields = read_only_fields + ('rating',)
 
     def get_rating(self, obj):
-        average = obj.reviews.all().aggregate(Avg('score')).get('score__avg')
+        average = obj.reviews.aggregate(Avg('score')).get('score__avg')
         return int(average) if average is not None else None
 
 
@@ -123,13 +111,8 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
         fields = (
             'id', 'name', 'year', 'description',
-            'rating', 'category', 'genre'
+            'category', 'genre'
         )
-        read_only_fields = ('id',)
-
-    def get_rating(self, obj):
-        average = obj.reviews.all().aggregate(Avg('score')).get('score__avg')
-        return int(average) if average is not None else None
 
 
 class SignUpDataSerializer(serializers.Serializer):
@@ -145,9 +128,6 @@ class SignUpDataSerializer(serializers.Serializer):
         max_length=MAX_LENGTH_EMAIL,
     )
 
-    def create(self, validated_data):
-        return User.objects.create(**validated_data)
-
 
 class GetTokenSerializer(serializers.Serializer):
     """Сериализатор для данных пользователя при получении токена."""
@@ -161,9 +141,6 @@ class GetTokenSerializer(serializers.Serializer):
         required=True,
         max_length=LENGTH_CONFIRMATION_CODE
     )
-
-    def create(self, validated_data):
-        return User.objects.create(**validated_data)
 
 
 class UserAdminSerializer(serializers.ModelSerializer):
