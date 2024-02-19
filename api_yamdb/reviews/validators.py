@@ -16,7 +16,7 @@ def validate_username(username):
         raise ValidationError(
             {'username': USERNAME_NOT_ME},
         )
-    banned_symbols = set(username) - set(re.findall(r'[\w.@+-]', username))
+    banned_symbols = re.sub(r'[\w.@+-]', '', username)
     if banned_symbols:
         raise ValidationError(
             {'username': BANNED_SYNBOL_IN_USERNAME.format(

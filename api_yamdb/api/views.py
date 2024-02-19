@@ -183,15 +183,16 @@ class APIGetToken(CreateAPIView):
             'confirmation_code'
         )
         user = get_object_or_404(User, username=username)
-        if user.confirmation_code != DEFAULT_CONFIRMATION_CODE:
-            if confirmation_code == user.confirmation_code:
-                return Response(
-                    {'token': str(RefreshToken.for_user(user).access_token)},
-                    status=status.HTTP_200_OK
-                )
-            if user.confirmation_code != DEFAULT_CONFIRMATION_CODE:
-                user.confirmation_code = DEFAULT_CONFIRMATION_CODE
-                user.save()
+        if (
+            user.confirmation_code != DEFAULT_CONFIRMATION_CODE
+            and confirmation_code == user.confirmation_code
+        ):
+            return Response(
+                {'token': str(RefreshToken.for_user(user).access_token)},
+                status=status.HTTP_200_OK
+            )
+        user.confirmation_code = DEFAULT_CONFIRMATION_CODE
+        user.save()
         return Response(
             {'confirmation_code': CODE_NOT_VALID},
             status=status.HTTP_400_BAD_REQUEST
